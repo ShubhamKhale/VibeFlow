@@ -1,0 +1,12 @@
+/* Home.css */
+
+/* Hide scrollbar while allowing scrolling */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+    

@@ -1,0 +1,20 @@
+132: Pop
+116: Rock
+152: Hip-Hop/Rap
+129: Jazz
+98: Classical
+106: Electronic
+113: Soul & Funk
+144: Reggae
+88: Blues
+197: Latino
+167: R&B
+95: Alternative
+464: Punk
+173: Folk
+196: Country
+85: Dance
+132: Pop
+197: Latino
+16: World Music
+356: Film Score

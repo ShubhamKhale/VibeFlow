@@ -2,26 +2,18 @@
 
 import axios from "axios";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "http://localhost:8080";
 
 interface NewRegisterUserData {
   username: string;
   password: string;
   email: string;
   mobile: string;
-}
+}   
 
 interface LoginUserData {
   username: string;
   password: string;
-}
-
-interface SearchQuery {
-  query: string;
-}
-
-interface GenreQuery {
-  genre: string;
 }
 
 interface AxiosError {
@@ -32,6 +24,7 @@ interface AxiosError {
   };
 }
 
+// user registeration api endpoint  
 const registerUser = async (
   userData: NewRegisterUserData
 ): Promise<{ message: string }> => {
@@ -49,6 +42,7 @@ const registerUser = async (
   }
 };
 
+// user login api endpoint 
 const loginUser = async (
   userData: LoginUserData
 ): Promise<{ message: string }> => {
@@ -64,55 +58,20 @@ const loginUser = async (
   }
 };
 
-const searchSongs = async ({ query }: SearchQuery): Promise<any> => {
+// search songs on the basis of query 
+const searchSongs = async (query: string): Promise<any> => {
   try {
-    const response = await axios.get(
-      `https:/deezerdevs-deezer.p.rapidapi.com/search?q=${query}`,
-      {
-        headers: {
-          "x-rapidapi-host": "",
-          App: "default-application_6800181",
-          "x-rapidapi-key":
-            "5308e2dc59msh2b085f72894e96bp19f4cejsn5f19c142a161",
-          Accept: "application/json",
-          "Content-Type": "",
-          "x-rapidapi-ua": "RapidAPI-Playground",
-        },
-      }
-    );
-    return response.data;
+    const response = await axios.get(`${API_URL}/songs/search`, {
+      params: { query },
+    });
+    return response.data; 
   } catch (error) {
-    const axiosError = error as AxiosError;
+    const axioError = error as AxiosError;
     throw new Error(
-      axiosError.response?.data?.message || "Error searching song"
+      axioError.response?.data?.message || "Error searaching songs"
     );
   }
-};
+}
 
-const getGenres = async ({ genre }: GenreQuery): Promise<any> => {
-  try {
-    const response = await axios.get(
-      `
-https://deezerdevs-deezer.p.rapidapi.com/genre/${genre}}`,
-      {    
-        headers: {
-          "x-rapidapi-host": "",
-          App: "default-application_6800181",
-          "x-rapidapi-key":
-            "5308e2dc59msh2b085f72894e96bp19f4cejsn5f19c142a161",
-          Accept: "application/json",
-          "Content-Type": "",
-          "x-rapidapi-ua": "RapidAPI-Playground",
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    const axiosError = error as AxiosError;
-    throw new Error(
-      axiosError.response?.data?.message || "Error searching song"
-    );
-  }
-};
 
-export { registerUser, loginUser, searchSongs, getGenres };
+export { registerUser, loginUser, searchSongs };

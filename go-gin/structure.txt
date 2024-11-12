@@ -1,0 +1,29 @@
+/myapp
+│
+├── /cmd
+│   └── /myapp
+│       └── main.go           # Entry point for the application
+│
+├── /config
+│   └── config.go             # Application configuration (e.g., database, environment variables)
+│
+├── /controllers
+│   └── userController.go     # Controllers for handling requests
+│
+├── /models
+│   └── user.go               # Structs and model definitions
+│
+├── /routes
+│   └── router.go             # Define the routes/endpoints of the app
+│
+├── /services
+│   └── userService.go        # Business logic and service layer
+│
+├── /middleware
+│   └── authMiddleware.go     # Middleware functions (e.g., authentication)
+│
+├── /utils
+│   └── response.go           # Helper functions (e.g., for sending responses)
+│
+└── /go.mod
+    /go.sum

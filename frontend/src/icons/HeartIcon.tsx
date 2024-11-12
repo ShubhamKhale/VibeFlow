@@ -17,6 +17,7 @@ const HeartIcon: React.FC<HeartIconProps> = (props) => {
         height={height}
         className={twMerge(className)}  
         viewBox="0 0 24 24"
+        // #FF0000
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >

@@ -28,7 +28,7 @@ const TabNavigator: React.FC = () => {
   
   return (        
     <>  
-    {location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/signin" ? (
+    {location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/signin" || location.pathname === "/playSong" ? (
       ""
     ) : (
       <div className='py-5 px-7 w-screen rounded-t-2xl border-2 bg-white shadow-[0px_-4px_20px_0px_rgba(155,154,156,0.20)]'>

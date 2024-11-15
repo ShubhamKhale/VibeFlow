@@ -28,6 +28,7 @@ import { useEffect, useRef, useState } from "react";
 import PlayIcon from "../icons/PlayIcon";
 import SoundMutedIcon from "../icons/SoundMutedIcon";
 import { useLocation } from "react-router";
+import { getSongMp3 } from "../services/apiService";
 
 interface SongDetails {
   SongTitle: string,
@@ -39,45 +40,69 @@ interface SongDetails {
 interface PlaySongProps {
   songs: SongDetails[];
   songIndex: number;
+  onClose: () => void; // Add this to props
 }
 
-const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex }) => {
+const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex, onClose }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [songmp3url, setSongMp3Url] = useState("");
   
   const currentSong = songs[songIndex];
+  const hasFetched = useRef(false);
 
 
   useEffect(() => {
-    const audioElement = audioRef.current;
 
-    if (audioElement) {
+
+    if (hasFetched.current) {
+    getSongMp3(currentSong.SongUrl)
+    .then((data) => {
+      console.log("mp3 url", data)
+      setSongMp3Url(data)
+      hasFetched.current = true;
+    })
+    .catch((error) => {
+      console.error("Error fetching song's mp3 url:", error);
+    })
+  }
+
+    console.log("song mp3 url", songmp3url)
+
+  
+  }, [songmp3url]);
+
+  useEffect(() => {
+    if (songmp3url) {
+      const audio = new Audio(songmp3url);
+      audioRef.current = audio;
+  
       const updateTime = () => {
-        setCurrentTime(audioElement.currentTime);
-
-        // Check if the current time equals the duration
-        if (audioElement.currentTime === audioElement.duration) {
-          setIsPlaying(true);
+        setCurrentTime(audio.currentTime);
+  
+        if (audio.currentTime === audio.duration) {
+          setIsPlaying(false);
         }
       };
-
+  
       const setAudioDuration = () => {
-        setDuration(audioElement.duration);
+        setDuration(audio.duration);
       };
-
-      audioElement.addEventListener("timeupdate", updateTime);
-      audioElement.addEventListener("loadedmetadata", setAudioDuration);
-
+  
+      audio.addEventListener("timeupdate", updateTime);
+      audio.addEventListener("loadedmetadata", setAudioDuration);
+  
       return () => {
-        audioElement.removeEventListener("timeupdate", updateTime);
-        audioElement.removeEventListener("loadedmetadata", setAudioDuration);
+        audio.pause();
+        audio.removeEventListener("timeupdate", updateTime);
+        audio.removeEventListener("loadedmetadata", setAudioDuration);
       };
     }
-  }, []);
-
+  }, [songmp3url]);
+  
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -88,7 +113,7 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex }) => {
       setIsPlaying(!isPlaying);
     }
   };
-
+  
   const toggleMute = () => {
     if (audioRef.current) {
       audioRef.current.muted = !isMuted;
@@ -97,8 +122,10 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex }) => {
   };
 
   const handleRangeChange = (event: CustomEvent) => {
+    const newTime = event.detail.value as number;
+  
     if (audioRef.current) {
-      const newTime = event.detail.value as number;
+      // Update the audio's current time
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
@@ -117,7 +144,7 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex }) => {
         <IonToolbar>
           <IonTitle>
             <div className="flex items-center justify-between">
-              <IonRouterLink routerLink="/search" className="">
+              <IonRouterLink  onClick={onClose} className="">
                 <LeftArrowIcon width="24px" height="24px" />
               </IonRouterLink>
 

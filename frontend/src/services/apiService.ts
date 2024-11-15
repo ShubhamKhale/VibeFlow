@@ -73,5 +73,21 @@ const searchSongs = async (query: string): Promise<any> => {
   }
 }
 
+// get song's mp3 url 
+const getSongMp3 = async (songUrl: string): Promise<string> => {
+  try {
+    const response = await axios.post(`${API_URL}/songs/scrape-mp3`, {
+      songUrl,
+    });
 
-export { registerUser, loginUser, searchSongs };
+    return response.data.mp3Url;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    throw new Error(
+      axiosError.response?.data?.message || "Error retrieving MP3 URL"
+    );
+  }
+};
+
+
+export { registerUser, loginUser, searchSongs, getSongMp3 };

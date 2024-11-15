@@ -154,8 +154,8 @@ const Search: React.FC = () => {
           )}
         </div>
         {/* Drawer Modal for PlaySong */}
-        <IonModal isOpen={isPlaySongCompOpen} onDidDismiss={() => {}} >
-          { <PlaySong songIndex={clickSongIndex} songs={songs} />}
+        <IonModal isOpen={isPlaySongCompOpen} onDidDismiss={() => setIsPlaySongCompOpen(false)} >
+          { <PlaySong songIndex={clickSongIndex} songs={songs} onClose={() => setIsPlaySongCompOpen(false)}  />}
         </IonModal>  
       </IonContent>   
     </IonPage>

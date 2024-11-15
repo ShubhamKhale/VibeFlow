@@ -145,6 +145,7 @@ func SongMp3Scraper(songUrl string) string {
 	// Launch the browser
 	browserURL, err := l.Launch()
 	if err != nil {
+		fmt.Println("Error launching browser:", err)
 		return ""
 	}
 
@@ -152,45 +153,23 @@ func SongMp3Scraper(songUrl string) string {
 	browser := rod.New().ControlURL(browserURL).MustConnect()
 	defer browser.MustClose()
 
+	// Open the page
 	page := browser.MustPage(songUrl)
 	page.MustWaitIdle()
 
-	// click play button to play song, so audio tag will be appended in dom
+	// Interact with the page to make sure the audio element is rendered
 	playBtn := page.MustElement(`a.c-btn.c-btn--primary`)
 	playBtn.MustClick()
 	page.MustWaitIdle()
 
-	mutebtn := page.MustElement(`span#player_volume`)
-	mutebtn.MustClick()
-	page.MustWaitIdle()
-
-	// click pause button to pause song
-	pauseBtn := page.MustElement("span#player_play_pause")
-	pauseBtn.MustClick()
-	page.MustWaitIdle()
-
-	// Get the HTML of the <body> tag
-	bodyHTML, err := page.MustElement("body").HTML()
-	if err != nil {
-		fmt.Println("Error retrieving body HTML:", err)
+	// Locate the audio source element and retrieve the src attribute
+	audioSrc, exists := page.MustElement("div.plyr.plyr--full-ui.plyr--audio.plyr--html5 > audio > source").Attribute("src")
+	if exists != nil {
+		fmt.Println("Error: src attribute not found in audio source tag")
 		return ""
 	}
 
-	// Use goquery to parse the HTML and locate the <audio> source src attribute
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(bodyHTML))
-	if err != nil {
-		fmt.Println("Error parsing HTML with goquery:", err)
-		return ""
-	}
-
-	// Locate the src attribute in the <audio> tag
-	src, exists := doc.Find("audio > source").Attr("src")
-	if !exists {
-		fmt.Println("Error: src attribute not found in source tag")
-		return ""
-	}
-
-	return src
+	return *audioSrc
 }
 
 func ScrapeSongDetails(song models.Song, page *rod.Page) (*models.SongDetails, error) {

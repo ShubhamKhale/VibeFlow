@@ -57,11 +57,9 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex, onClose }) => {
 
   useEffect(() => {
 
-
-    if (hasFetched.current) {
+    if (!hasFetched.current) {
     getSongMp3(currentSong.SongUrl)
     .then((data) => {
-      console.log("mp3 url", data)
       setSongMp3Url(data)
       hasFetched.current = true;
     })
@@ -73,7 +71,7 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex, onClose }) => {
     console.log("song mp3 url", songmp3url)
 
   
-  }, [songmp3url]);
+  },  [songmp3url]);
 
   useEffect(() => {
     if (songmp3url) {
@@ -204,7 +202,7 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex, onClose }) => {
             </p>
             <audio
               ref={audioRef}
-              src="https://raag.fm/files/mp3/128/Hindi-Singles/23303/Kesariya%20(Brahmastra)%20-%20(Raag.Fm).mp3"
+              src={songmp3url}
               muted={isMuted}
             ></audio>
             <IonRange

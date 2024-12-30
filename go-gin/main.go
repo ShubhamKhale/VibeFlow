@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"vibeflow-go-gin-application/helpers"
 	"vibeflow-go-gin-application/routes"
 
 	"github.com/gin-contrib/cors"
@@ -11,6 +12,9 @@ import (
 func main() {
 	// Initialize Gin
 	r := gin.Default()
+
+	// connect to mongodb
+	helpers.InitMongoClient()
 
 	// Configure CORS middleware
 	r.Use(cors.New(cors.Config{

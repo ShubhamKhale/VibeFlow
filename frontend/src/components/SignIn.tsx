@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import upperIcon from "../images/upperIcon.png";
 import { Button, Form, Input, message } from "antd";
 import RightArrowIcon from "../icons/RightArrowIcon";
@@ -7,19 +7,15 @@ import PasswordIcon from "../icons/PasswordIcon";
 import { useHistory } from "react-router";
 import { loginUser } from "../services/apiService";
 import { NoticeType } from "antd/es/message/interface";
+import { useNavigate } from "react-router-dom";
    
 
 const SignIn: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
-  const history = useHistory();
-
-  const moveToHomePage = () => {
-    history.push("/home");
-  };
-
-  const moveToSignUp = () => {
-    history.push("/signup");
-  };
+  const [username, setUsername] = useState<string>();
+  const [password, setPassword] = useState<string>();
+ 
+  const navigate = useNavigate();
 
   const msgNotify = (messageType: NoticeType, content: string) => {
     messageApi.open({
@@ -28,18 +24,33 @@ const SignIn: React.FC = () => {
     });    
   }; 
 
-  const loginUserFunc = async (values: any) => {
-    console.log("payload for loginUser api :- ", values);
+  const loginUserFunc = async () => {
+    
+    // Validate all required fields
+    if (!username || !password) {
+      msgNotify("error", "All fields are required!");
+      return;
+    }
+
+    const loginpayload = {
+      "username": username.trim(),
+      "password": password.trim()
+    }
+
+    console.log("login user api payload:- ", loginpayload)
+
     try {
-      const response = await loginUser(values);
+      const response = await loginUser(loginpayload);
+
+      console.log("login user func response", response)
 
       // Set the user id in localStorage
-      if (response?.userId) {
-        localStorage.setItem("userId", response.userId);
-      }   
+      // if (response?.userId) {
+        // localStorage.setItem("userId", response.userId);
+      // }   
    
       msgNotify("success", response.message)   
-      moveToHomePage();        
+      navigate("/home")       
      
     } catch (error: any) {     
       console.error("login user api response:- ", error.message);
@@ -64,7 +75,6 @@ const SignIn: React.FC = () => {
         <Form
           name="signin"
           initialValues={{ remember: true }}
-          onFinish={loginUserFunc}   
         >
           <div className="mt-16 space-y-8">
             <Form.Item
@@ -82,6 +92,7 @@ const SignIn: React.FC = () => {
                 placeholder="Username"
                 prefix={<UserNameIcon width="16px" height="16px" />}
                 autoComplete="off"
+                onChange={(e) => {setUsername(e.target.value)}}
               />
             </Form.Item>
             <Form.Item
@@ -94,6 +105,8 @@ const SignIn: React.FC = () => {
                 className="rounded-full border-1 px-4 py-3 shadow-lg"
                 placeholder="Password"
                 prefix={<PasswordIcon width="16px" height="16px" />}
+                autoComplete="off"
+                onChange={(e) => {setPassword(e.target.value)}}
               />
             </Form.Item>
           </div>
@@ -107,6 +120,7 @@ const SignIn: React.FC = () => {
                 type="primary"
                 htmlType="submit"
                 className="px-4 py-2 rounded-full cursor-pointer bg-gradient-to-r from-[#F97794] to-[#623AA2]"
+                onClick={() => {loginUserFunc()}}
               >
                 <RightArrowIcon width="16px" height="16px" />
               </Button>
@@ -115,7 +129,7 @@ const SignIn: React.FC = () => {
         </Form>
         <p className="mt-4 cursor-pointer text-xs text-center ">
           Don't have an account?{" "}
-          <span onClick={moveToSignUp} className="underline">
+          <span onClick={() => {navigate("/signup")}} className="underline">
             Create
           </span>
         </p>

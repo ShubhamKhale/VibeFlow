@@ -15,48 +15,83 @@ import DefaultMusicIcon from "../images/default-music-icon.jpg";
 import { useCallback, useEffect, useState } from "react";
 import SearchHistoryContainer from "../components/SearchHistoryContainer";
 import PlaySong from "../components/PlaySong";
-import { searchSongs } from "../services/apiService"
+import {
+  getTopAlbumns,
+  getTopGenres,
+  searchJioSaavnSongs,
+  searchSongs,
+} from "../services/apiService";
 import { useNavigate } from "react-router-dom";
-
+import MusicLoading from "../icons/music-loading.gif";
+import MusicPlaying from "../icons/music-playing.gif";
+import { useModal } from "../context/ModalContext";
+import { useSong } from "../context/SongContext"; // Import the SongContext hook
 
 const Search: React.FC = () => {
+  const { setIsModalOpen } = useModal();
+  const { setPlaylist, playSong } = useSong(); // Destructure methods from the context
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showSearchHistoryContainer, setShowSearchHistoryContainer] =
     useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [songs, setSongs] = useState<any[]>([]); 
-  const [clickSongIndex, setClickSongIndex] = useState<number>(0)
-  const [isPlaySongCompOpen, setIsPlaySongCompOpen] = useState<boolean>(false)
+  const [searchSongs, setSearchSongs] = useState<any[]>([]);
+  const [clickSongIndex, setClickSongIndex] = useState<number>(0);
+  const [isPlaySongCompOpen, setIsPlaySongCompOpen] = useState<boolean>(false);
+  const [topAlbumns, setTopAlbumns] = useState<any[]>([]);
+
+  useEffect(() => {
+    getTopAlbumns()
+      .then((data) => {
+        console.log("top albumns response", data.mongodocs);
+        const albums = Array.isArray(data.mongodocs)
+          ? data.mongodocs
+          : [data.mongodocs];
+        setTopAlbumns(albums);
+      })
+      .catch((error) => {
+        console.log("error fetching top albumns", error);
+      });
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 500);   
+    }, 600);
 
     return () => {
-      clearTimeout(handler);    
+      clearTimeout(handler);
     };
   }, [searchQuery]);
 
-  // Fetch songs whenever debouncedSearchQuery changes 
+  // Fetch songs whenever debouncedSearchQuery changes
   useEffect(() => {
     if (debouncedSearchQuery) {
       setLoading(true);
       const encodedQuery = encodeURIComponent(debouncedSearchQuery);
-      searchSongs(encodedQuery)
-      .then((data) => {
-        console.log("data", data)
-        setSongs(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching song:", error);
-        setLoading(false); 
-      })
+
+      searchJioSaavnSongs(encodedQuery)
+        .then((data) => {
+          console.log("search jiosaavn songs", data);
+          if (data != null) {
+            setSearchSongs(data);
+          }
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log("search jiosaavn songs error log", error);
+          setLoading(false);
+        });
     }
-  }, [debouncedSearchQuery])
+  }, [debouncedSearchQuery]);
+
+  const handlePlaySong = (song: any) => {
+    console.log("song clicked !!!", song)
+    playSong(song); // Set the selected song as the current song in the global context
+    setPlaylist(searchSongs); 
+    setIsModalOpen(true)
+  };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
@@ -92,72 +127,63 @@ const Search: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <div className="px-5 mt-7 mb-7">
+        <div className="px-4 mt-7 mb-7">
           {loading ? (
-            <div className="flex justify-center items-center h-full">
-              <IonSpinner name="crescent" />
+            <div className=" mt-[50%] flex justify-center items-center">
+              <img className="w-44 h-44" src={MusicLoading} alt="-" />
             </div>
-          ) 
-          : (   
+          ) : (
             <div>
-              {/* showSearchHistoryContainer ? (
-                <SearchHistoryContainer />
-              )    
-              : ( */}
-                <>
-                  <p className="text-[#060307] font-urbanist text-base font-semibold leading-normal">
-                    Browse All
-                  </p>
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    {/* {uniqueGenresArray?.map((genre, i) => (
+              <>
+                {searchSongs?.length === 0 ? (
+                  <div className=" mt-2 mb-[7rem] grid grid-cols-2 gap-x-2 gap-y-4 items-center">
+                    {topAlbumns?.map((albumn, i) => (
                       <div
                         key={i}
-                        className="max-w-fit p-2.5 flex items-center gap-x-3 flex-shrink-0 rounded-[10px] bg-[#EDEDED]"
+                        className="py-3 flex flex-col items-center rounded-[10px] bg-[#EDEDED]"
                       >
                         <img
-                          className="w-11 h-11 rounded-xl"
-                          src={genre?.picture || DefaultMusicIcon}
+                          className="w-[130px] h-[130px] object-cover rounded-xl"
+                          src={albumn?.albumnimg || DefaultMusicIcon}
                         />
-                        <p className="text-[#060307] font-urbanist text-xs font-semibold leading-normal capitalize">
-                          {genre?.name}
-                        </p>
                       </div>
-                    ))} */}
+                    ))}
                   </div>
+                ) : (
                   <div className="mt-4">
-                    <div className="mt-4 grid grid-cols-1 gap-4">
-                      {songs.map((song, i) => (
-                        <div key={i} className="flex items-center gap-x-3" onClick={() => {
-                          setClickSongIndex(i)
-                          setIsPlaySongCompOpen(true)
-                        }}  >
+                    <div className="mt-4 grid grid-cols-1 gap-6">
+                      {searchSongs.map((song, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-x-3"
+                          onClick={() => handlePlaySong(song)} // Play the selected song on click
+                        >
                           <img
-                            className="w-11 h-11 rounded-xl"
-                            src={song.ImageURL != "" ? song.ImageURL : DefaultMusicIcon}
+                            className="w-[100px] h-[100px] object-cover rounded-xl"
+                            src={
+                              song?.song_image_url !== ""
+                                ? song?.song_image_url
+                                : DefaultMusicIcon
+                            }
                           />
                           <div>
-                            <p className="text-[#060307] font-urbanist text-xs font-semibold leading-normal capitalize">
-                              {song.SongTitle}
+                            <p className="text-[#060307] font-urbanist text-[16px] font-semibold leading-normal capitalize">
+                              {song?.song_name}
                             </p>
                             <p className="text-[#060307] font-urbanist text-xs leading-normal capitalize">
-                              {song.Artists}
+                              {song?.primary_artists}
                             </p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                </>
-                
-                 
+                )}
+              </>
             </div>
           )}
         </div>
-        {/* Drawer Modal for PlaySong */}
-        <IonModal isOpen={isPlaySongCompOpen} onDidDismiss={() => setIsPlaySongCompOpen(false)} >
-          { <PlaySong songIndex={clickSongIndex} songs={songs} onClose={() => setIsPlaySongCompOpen(false)}  />}
-        </IonModal>  
-      </IonContent>   
+      </IonContent>
     </IonPage>
   );
 };

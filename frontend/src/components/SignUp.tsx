@@ -1,5 +1,5 @@
 // src/components/SignUp.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
 import UserNameIcon from "../icons/UserNameIcon";
 import PasswordIcon from "../icons/PasswordIcon";
@@ -11,20 +11,19 @@ import GoogleIcon from "../icons/GoogleIcon";
 import upperIcon from "../images/upperIcon.png";
 import MobileIcon from "../icons/MobileIcon";
 import { useHistory } from "react-router";
-import { registerUser } from "../services/apiService";
 import { NoticeType } from "antd/es/message/interface";
+import { createUser } from "../services/apiService";
+import { getItem, setItem } from "../services/storageService";
+import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
-  const history = useHistory();
+  const [userName, setUserName] = useState<string>();
+  const [userPassword, SetUserPassword] = useState<string>();
+  const [userEmail, setUserEmail] = useState<string>();
+  const [userMobileNo, setUserMobileNo] = useState<string>();
 
-  const moveToHomePage = () => {
-    history.push("/home");
-  };
-
-  const moveToSignIn = () => {
-    history.push('/signin');   
-  };    
+  const navigate = useNavigate()
 
   const msgNotify = (messageType: NoticeType, content: string) => {
     messageApi.open({
@@ -33,25 +32,29 @@ const SignUp: React.FC = () => {
     });    
   }; 
 
-  const registerNewUser = async (values: any) => {
-    console.log("payload for registerNewUser:- ", values);
+  const createNewUserFunc = async () => {
+
+    // Validate all required fields
+    if (!userName || !userPassword || !userEmail || !userMobileNo) {
+      msgNotify("error", "All fields are required!");
+      return;
+    }
+    const userpayload = {
+        "username":  userName.trim(),
+        "password":  userPassword.trim(),
+        "email":     userEmail.trim(),
+        "mobile":    userMobileNo.trim()
+    }
     try {
-      const response = await registerUser(values);
-      console.log("register new user api response:- ", response);
-      console.log("user id:- ", response?.userId);
-
-      // Set the user id in localStorage
-      if (response?.userId) {
-        localStorage.setItem("userId", response.userId);
+      const response = await createUser(userpayload);
+      if (response.statuscode == 200) {
+        await setItem("userid", response.userID)
+        navigate("/home")   
       }
-
-      msgNotify("success", response.message)
-   
-      moveToHomePage();  
-    } catch (error: any) {
-      console.error("register new user api response:- ", error.message);
-
-      msgNotify("error", error.message)   
+      console.log("response userid", response.userID)
+      console.log("status code :- ", response.statuscode)
+    } catch (error) {
+      console.error("Failed to create user:", error);
     }
   };
 
@@ -71,7 +74,6 @@ const SignUp: React.FC = () => {
           <Form
             name="signup"
             initialValues={{ remember: true }}
-            onFinish={registerNewUser}
           >
             <div className="mt-4 space-y-8">
               <Form.Item
@@ -89,9 +91,9 @@ const SignUp: React.FC = () => {
                   placeholder="Username"
                   prefix={<UserNameIcon width="16px" height="16px" />}
                   autoComplete="off"
+                  onChange={(e) => {setUserName(e.target.value)}}
                 />
               </Form.Item>
-
               <Form.Item
                 name="password"
                 rules={[
@@ -103,9 +105,9 @@ const SignUp: React.FC = () => {
                   placeholder="Password"
                   prefix={<PasswordIcon width="16px" height="16px" />}
                   autoComplete="off"
+                  onChange={(e) => {SetUserPassword(e.target.value)}}
                 />
               </Form.Item>
-
               <Form.Item
                 name="email"
                 rules={[
@@ -119,9 +121,9 @@ const SignUp: React.FC = () => {
                   type="email"
                   prefix={<EmailIcon width="14px" height="14px" />}
                   autoComplete="off"
+                  onChange={(e) => {setUserEmail(e.target.value)}}
                 />
               </Form.Item>
-
               <Form.Item
                 name="mobile"
                 rules={[
@@ -142,17 +144,19 @@ const SignUp: React.FC = () => {
                   prefix={<MobileIcon width="14px" height="14px" />}
                   onKeyPress={handleKeyPress}
                   autoComplete="off"
+                  onChange={(e) => {setUserMobileNo(e.target.value)}}
                 />
               </Form.Item>   
             </div>
-            <p className="mt-4 font-semibold cursor-pointer text-xs text-right underline" onClick={ ()=> moveToSignIn()} >Sign in to your account</p>   
+            <p className="mt-4 font-semibold cursor-pointer text-xs text-right underline"  >Sign in to your account</p>   
             <div className="mt-4 h-fit flex items-start justify-center space-x-3">
               <p className="font-semibold text-xl">Create</p>       
               <Form.Item>
                 <Button
                   type="primary"
-                  htmlType="submit"
+                  // htmlType="submit"
                   className="px-4 py-2 rounded-full cursor-pointer bg-gradient-to-r from-[#F97794] to-[#623AA2]"
+                  onClick={() => {createNewUserFunc()}}
                 >
                   <RightArrowIcon width="16px" height="16px" />
                 </Button>

@@ -16,20 +16,18 @@ var client *mongo.Client
 
 // Initialize MongoDB client
 func InitMongoClient() {
+	LoadEnv() // Ensure env is loaded once
 
-	// load environment variables once
-	LoadEnv()
-
-	// Retrieve the mongodb url
 	mongourl := GetEnv("mongo_url")
 	if mongourl == "" {
 		fmt.Println("mongo_url not found in environment variables")
+		return
 	}
 
 	fmt.Println("mongourl", mongourl)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second) // Set timeout
-	defer cancel()                                                           // Ensure cancellation to avoid context leak
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI(mongourl))
@@ -38,7 +36,6 @@ func InitMongoClient() {
 		return
 	}
 
-	// Verify connection
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		fmt.Printf("MongoDB ping error: %s\n", err.Error())
@@ -52,7 +49,7 @@ func InitMongoClient() {
 func MongoGetOneDocument(collectionName string, filter interface{}) (bson.M, error) {
 
 	// load environment variables once
-	LoadEnv()
+	// LoadEnv()
 
 	// Retrieve the  mongodb database name
 	dbname := GetEnv("mongo_dbname")
@@ -74,7 +71,7 @@ func MongoGetOneDocument(collectionName string, filter interface{}) (bson.M, err
 func MongoGetMultipleDocuments(collectionName string, filter interface{}, limit int64, offset int64) ([]bson.M, error) {
 
 	// load environment variables once
-	LoadEnv()
+	// LoadEnv()
 
 	// Retrieve the mongodb database name
 	dbname := GetEnv("mongo_dbname")
@@ -119,7 +116,7 @@ func MongoGetMultipleDocuments(collectionName string, filter interface{}, limit 
 func MongoAddOneDocument(collectionName string, document interface{}) (*mongo.InsertOneResult, error) {
 
 	// load environment variables once
-	LoadEnv()
+	// LoadEnv()
 	// Retrieve the  mongodb database name
 	dbname := GetEnv("mongo_dbname")
 	if dbname == "" {
@@ -140,7 +137,7 @@ func MongoAddOneDocument(collectionName string, document interface{}) (*mongo.In
 func MongoAddMultipleDocuments(collectionName string, documents []interface{}) (*mongo.InsertManyResult, error) {
 
 	// load environment variables once
-	LoadEnv()
+	// LoadEnv()
 
 	// Retrieve the  mongodb database name
 	dbname := GetEnv("mongo_dbname")
@@ -186,7 +183,7 @@ func MongoDocumentExist(collectionName string, filter bson.M) (bool, bson.M, err
 // Update one document in a collection with options
 func MongoUpdateOneDocument(collectionName string, filter bson.M, update bson.M, updateOptions *options.UpdateOptions) (*mongo.UpdateResult, error) {
 	// Load environment variables once
-	LoadEnv()
+	// LoadEnv()
 
 	// Retrieve the MongoDB database name
 	dbname := GetEnv("mongo_dbname")
@@ -208,7 +205,7 @@ func MongoUpdateOneDocument(collectionName string, filter bson.M, update bson.M,
 func MongoFindOneDocument(collectionName string, filter bson.M, projection bson.M) (bson.M, error) {
 
 	// Load environment variables once
-	LoadEnv()
+	// LoadEnv()
 
 	// Retrieve the MongoDB database name
 	dbname := GetEnv("mongo_dbname")

@@ -8,7 +8,7 @@ import { useHistory } from "react-router";
 import { loginUser } from "../services/apiService";
 import { NoticeType } from "antd/es/message/interface";
 import { useNavigate } from "react-router-dom";
-   
+import { getItem, setItem } from "../services/storageService";
 
 const SignIn: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -44,10 +44,7 @@ const SignIn: React.FC = () => {
 
       console.log("login user func response", response)
 
-      // Set the user id in localStorage
-      // if (response?.userId) {
-        // localStorage.setItem("userId", response.userId);
-      // }   
+      await setItem("userId", response?.mongodoc._id);
    
       msgNotify("success", response.message)   
       navigate("/home")       

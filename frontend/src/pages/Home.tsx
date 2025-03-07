@@ -4,7 +4,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonRouterLink,
   IonModal,
 } from "@ionic/react";
 import "./Home.css";
@@ -106,11 +105,9 @@ const Home: React.FC = () => {
               <p className="text-[#060307] font-urbanist text-lg font-semibold leading-normal">
                 Good evening
               </p>
-              <div className="flex items-center gap-x-7">
-                {/* <MessageIcon /> */}
-                <IonRouterLink routerLink="/profile">
+              <div onClick={() => {navigate('/profile')}} className="flex items-center gap-x-7">
+               
                   <ProfileIcon />
-                </IonRouterLink>
               </div>
             </div>
           </IonTitle>

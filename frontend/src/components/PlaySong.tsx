@@ -29,6 +29,7 @@ import PlayIcon from "../icons/PlayIcon";
 import SoundMutedIcon from "../icons/SoundMutedIcon";
 import { useLocation } from "react-router";
 import { getSongMp3 } from "../services/apiService";
+import { useNavigate } from "react-router-dom";
 
 interface SongDetails {
   SongTitle: string,
@@ -53,7 +54,7 @@ const PlaySong: React.FC<PlaySongProps> = ({ songs, songIndex, onClose }) => {
   
   const currentSong = songs[songIndex];
   const hasFetched = useRef(false);
-
+   const navigate = useNavigate();
 
   useEffect(() => {
 

@@ -30,3 +30,19 @@ type PlaylistSongs struct {
 	SongURL    string `bson:"songurl" json:"songurl"`
 	SongArtist string `bson:"songartist" json:"songartist"`
 }
+
+type FavouriteSong struct {
+	AlbumID           string `json:"album_id"`
+	AlbumURL          string `json:"album_url"`
+	EncryptedMediaURL string `json:"encrypted_media_url"`
+	HasLyrics         string `json:"has_lyrics"`
+	Lyrics            string `json:"lyrics"`
+	PrimaryArtists    string `json:"primary_artists"`
+	PrimaryArtistsID  string `json:"primary_artists_id"`
+	SongAudioPreview  string `json:"song_audio_preview"`
+	SongAudioURL      string `json:"song_audio_url"`
+	SongID            string `json:"song_id"`
+	SongImageURL      string `json:"song_image_url"`
+	SongName          string `json:"song_name"`
+	Vcode             string `json:"vcode"`
+}

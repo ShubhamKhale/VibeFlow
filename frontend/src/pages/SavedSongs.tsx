@@ -1,75 +1,136 @@
-import { IonContent, IonHeader, IonInput, IonItem, IonPage, IonTitle, IonToolbar } from '@ionic/react';
-import SearchIcon from '../icons/SearchIcon';
-import RecentlyPlayedImg from '../images/recentlyPlayedImg.png'
-import { useState } from 'react';
-import SearchHistoryContainer from '../components/SearchHistoryContainer';
-import CrossIcon from '../icons/CrossIcon';
-
+import {
+  IonContent,
+  IonHeader,
+  IonInput,
+  IonItem,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+} from "@ionic/react";
+import SearchIcon from "../icons/SearchIcon";
+import DefaultMusicIcon from "../images/default-music-icon.jpg";
+import { useSongContext } from "../context/SongContext";
+import { useEffect, useState } from "react";
+import { getOfflineSongs } from "../services/storageService";
+import { Song } from "../App";
+import GlobalPlaySong from "../components/GlobalPlaySong";
 
 const SavedSongs: React.FC = () => {
+  const { setSongs, playSong, openModal } = useSongContext();
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [savedSongs, setSavedSongs] = useState<Song[]>([]);
+  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-    const [isInputFocused, setIsInputFocused] = useState(false);
+  useEffect(() => {
+    const fetchOfflineSongs = async () => {
+      const offlineSongs = await getOfflineSongs();
+      console.log("offline songs", offlineSongs);
+      setSavedSongs(offlineSongs);
+      setFilteredSongs(offlineSongs);
+    };
 
-    return (  
-        <IonPage>
-            <IonHeader>
-                <IonToolbar >
-                    <IonTitle  >
-                        <div className='flex items-center gap-x-3'>
-                            <SearchIcon className='' width="24px" height="24px" />
-                            <IonInput
-                                className={`font-urbanist text-base font-medium leading-[18px] ${isInputFocused ? 'text-[#060307]' : 'text-[#99989A]'}`}
-                                placeholder="What do you want to listen to?"
-                                onFocus={() => {
-                                    setIsInputFocused(true);
-                                }}
-                                onBlur={() => {
-                                    setIsInputFocused(false);
-                                }}
-                            />
-                        </div>
-                    </IonTitle>
-                </IonToolbar>
-            </IonHeader>
-            <IonContent fullscreen>
-                <div className='px-5 mt-7 mb-7 '>
+    fetchOfflineSongs();
+  }, []);
 
-          <div className='flex items-center justify-between'>
-    
-            <p className='text-[#060307] pt-2 font-urbanist text-base font-semibold leading-5 capitalize'>saved songs</p>
-            <p className='mt-2.5 text-[#7F8489] mb-0 font-urbanist text-xs font-medium leading-normal capitalize'>84 songs</p>
-          </div>  
-          <div className='mt-4 space-y-2 '>  
-            {  
-                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]?.map((i) => (
-                    <div key={i} className='flex items-center justify-between py-[5px] pr-3 pl-[5px] gap-x-3 flex-shrink-0 rounded-[10px] bg-[#EDEDED]'>
-                        <div className='inline-flex items-center'>
-                            <img className='w-10 h-10 rounded-xl' src={RecentlyPlayedImg} alt="-" />
-                            <div className='ml-4'>
-                                <p className='text-[#060307] font-urbanist text-sm font-semibold leading-normal capitalize'>hip-hop mix</p>
-                                <p className='mt-1 text-[#7F8489] font-urbanist text-[11px] font-medium leading-normal capitalize'>travis skott, asap rocky.</p>
-                            </div>
-                        </div>  
-                            
-                        <div>
-                            <CrossIcon width='24px' height='24px' className='flex items-center justify-center cursor-pointers' />
-                        </div>
+  const setLocalSongs = async (song: Song, idx: number) => {
+    setSongs(savedSongs);
+    playSong(song, idx);
+    openModal(<GlobalPlaySong />);
+  };
 
-                    </div>
-                ))
-
-            }
-            
-          </div>
-
-
-
-
-
-                </div>
-            </IonContent>  
-        </IonPage>
+  // Sorting function
+  const sortSongs = () => {
+    const sorted = [...filteredSongs].sort((a, b) =>
+      sortOrder === "asc"
+        ? a.song_name.localeCompare(b.song_name)
+        : b.song_name.localeCompare(a.song_name)
     );
+    setFilteredSongs(sorted);
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  // Search function
+  useEffect(() => {
+    if (searchQuery === "") {
+      setFilteredSongs(savedSongs);
+    } else {
+      const filtered = savedSongs.filter((song) =>
+        song.song_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredSongs(filtered);
+    }
+  }, [searchQuery, savedSongs]);
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>
+            <div className="flex items-center gap-x-3">
+              <SearchIcon width="24px" height="24px" />
+              <IonInput
+                className={`font-urbanist text-base font-medium leading-[18px] ${
+                  isInputFocused ? "text-[#060307]" : "text-[#99989A]"
+                }`}
+                placeholder="What do you want to listen to?"
+                value={searchQuery}
+                onIonInput={(e) => setSearchQuery(e.detail.value!)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+              />
+            </div>
+          </IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent fullscreen scrollY={false}>
+        <div className="px-5 mt-4">
+          <div className="pt-2 flex items-center justify-between">
+            <p className="text-[#060307] font-urbanist text-base font-semibold leading-5 capitalize">
+              Saved Songs
+            </p>
+            <button
+              onClick={sortSongs}
+              className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs"
+            >
+              Sort {sortOrder === "asc" ? "A-Z" : "Z-A"}
+            </button>
+            <p className="text-[#7F8489] mb-0 font-urbanist text-xs font-medium leading-normal capitalize">
+              {filteredSongs.length} songs
+            </p>
+          </div>
+          <div
+            style={{ maxHeight: "calc(100vh - 100px)", scrollbarWidth: "none" }}
+            className="mt-4 mb-8 grid grid-cols-1 gap-6 overflow-y-auto scroll-smooth"
+          >
+            {filteredSongs.map((song, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-x-3"
+                onClick={() => setLocalSongs(song, i)}
+              >
+                <img
+                  className="w-[100px] h-[100px] object-cover rounded-xl"
+                  src={
+                    song.song_image_url !== "" ? song.song_image_url : DefaultMusicIcon
+                  }
+                />
+                <div>
+                  <p className="text-[#060307] font-urbanist text-[16px] font-semibold leading-normal capitalize">
+                    {song.song_name}
+                  </p>
+                  <p className="text-[#060307] font-urbanist text-xs leading-normal capitalize">
+                    {song.primary_artists}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </IonContent>
+    </IonPage>
+  );
 };
 
 export default SavedSongs;

@@ -4,7 +4,6 @@ import {
   IonInput,
   IonItem,
   IonPage,
-  IonRouterLink,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
@@ -15,8 +14,12 @@ import ShareIcon from "../icons/ShareIcon";
 import PlaylistComp from "../components/PlaylistComp";
 import PlaylistImg from "../images/playlistImg.png";
 import LeftArrowIcon from "../icons/LeftArrowIcon";
+import { useNavigate } from "react-router-dom";
 
 const Profile: React.FC = () => {
+
+  const navigate = useNavigate();
+
   return (
     <IonPage>
       <IonHeader>
@@ -24,16 +27,16 @@ const Profile: React.FC = () => {
           <IonTitle>
             <div className="flex items-center justify-between">
               <div className="inline-flex items-center gap-x-3">
-                <IonRouterLink routerLink="/home">
+                <div onClick={() => {navigate("/home")}} >
                   <LeftArrowIcon width="24px" height="24px" />
-                </IonRouterLink>
+                </div>
                 <p className="mb-0 text-[#060307] font-urbanist text-base font-semibold leading-5">
                   Profile
                 </p>
               </div>
-              <IonRouterLink routerLink="/settings">
+              <div onClick={() => {navigate("/settings")}} >
                 <SettingsIcon width="24px" height="24px" />
-              </IonRouterLink>
+              </div>
             </div>
           </IonTitle>
         </IonToolbar>
@@ -52,14 +55,14 @@ const Profile: React.FC = () => {
               <div>
                 <p className="font-urbanist text-lg text-[#060307]">Suchir</p>
                 <div className="mt-1 flex items-center justify-between gap-x-4">
-                  <IonRouterLink routerLink="/edit">
+                  <div onClick={() => {navigate("/edit")}}>
                     <div className="flex items-center rounded-md space-x-2.5 px-5 py-1.5 bg-[#EDEDED]">
                       <EditIcon width="18px" height="24px" />
                       <p className="font-urbanist font-semibold text-sm leading-5 text-[#060307]">
                         Edit
                       </p>
                     </div>
-                  </IonRouterLink>
+                  </div>
                   <div className="inline-flex items-center rounded-md space-x-2.5 px-5 py-1.5 bg-[#EDEDED]">
                     <ShareIcon width="18px" height="24px" />
                     <p className="font-urbanist font-semibold text-sm leading-5 text-[#060307]">

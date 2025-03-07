@@ -1,9 +1,12 @@
-import { IonContent, IonHeader, IonPage, IonRouterLink, IonTitle, IonToolbar } from "@ionic/react";
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import LeftArrowIcon from "../icons/LeftArrowIcon";
 import LanguageIcon from "../icons/LanguageIcon";
 import VersionIcon from "../icons/VersionIcon";
+import { useNavigate } from "react-router-dom";
 
 const Settings: React.FC = () => {
+
+    const navigate = useNavigate();
 
     return (
         <IonPage>
@@ -12,12 +15,12 @@ const Settings: React.FC = () => {
                     <IonTitle  >
                         <div className='flex items-center justify-between'>
                             <div className='inline-flex items-center gap-x-3'>
-                                <IonRouterLink
-                                    routerLink='/profile'
+                                <div 
+                                    onClick={() => {navigate("/profile")}}
                                 >
   
                                     <LeftArrowIcon width='24px' height='24px' />
-                                </IonRouterLink>
+                                </div>
                                 <p className='mb-0 text-[#060307] font-urbanist text-base font-semibold leading-5'>Settings</p>
                             </div>
 
@@ -30,7 +33,7 @@ const Settings: React.FC = () => {
             <IonContent fullscreen>
                 <div className='px-5 mt-7 mb-7 '>
 
-                    <IonRouterLink routerLink='/languages' className='pb-3 border-b-2 border-b-[#EDEDED]'>
+                    <div onClick={() => {navigate("/languages")}} className='pb-3 border-b-2 border-b-[#EDEDED]'>
                         <p className='font-urbanist font-medium text-sm leading-5 text-[#7F8489]'>Languages</p>
                         <div className='mt-2 flex items-center gap-x-5'>
                             <LanguageIcon width='24px' height='24px' />
@@ -39,7 +42,7 @@ const Settings: React.FC = () => {
                                 <p className='mb-0 font-urbanist font-medium text-[11px] text-[#7F8489]'>choose your preferred languages for music.</p>
                             </div>
                         </div>
-                    </IonRouterLink>
+                    </div>
 
                     <div className='py-3 border-b-2 border-b-[#EDEDED]'>  
                         <p className='font-urbanist font-medium text-sm leading-5 text-[#7F8489]'>About</p>

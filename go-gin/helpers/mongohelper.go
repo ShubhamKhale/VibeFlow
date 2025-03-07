@@ -181,3 +181,57 @@ func MongoDocumentExist(collectionName string, filter bson.M) (bool, bson.M, err
 	}
 	return true, result, nil // Document exists
 }
+
+// Update one document in a collection
+// Update one document in a collection with options
+func MongoUpdateOneDocument(collectionName string, filter bson.M, update bson.M, updateOptions *options.UpdateOptions) (*mongo.UpdateResult, error) {
+	// Load environment variables once
+	LoadEnv()
+
+	// Retrieve the MongoDB database name
+	dbname := GetEnv("mongo_dbname")
+	if dbname == "" {
+		log.Fatal("mongo_dbname not found in environment variables")
+	}
+
+	collection := client.Database(dbname).Collection(collectionName)
+
+	result, err := collection.UpdateOne(context.TODO(), filter, update, updateOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// MongoFindOneDocument retrieves a single document from a collection based on a filter.
+func MongoFindOneDocument(collectionName string, filter bson.M, projection bson.M) (bson.M, error) {
+
+	// Load environment variables once
+	LoadEnv()
+
+	// Retrieve the MongoDB database name
+	dbname := GetEnv("mongo_dbname")
+	if dbname == "" {
+		log.Fatal("mongo_dbname not found in environment variables")
+	}
+
+	collection := client.Database(dbname).Collection(collectionName)
+
+	// Define options for the query
+	findOptions := options.FindOne()
+	if projection != nil {
+		findOptions.SetProjection(projection) // Apply projection if provided
+	}
+
+	var result bson.M
+	err := collection.FindOne(context.TODO(), filter, findOptions).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // No document found
+		}
+		return nil, err // Other errors
+	}
+
+	return result, nil
+}

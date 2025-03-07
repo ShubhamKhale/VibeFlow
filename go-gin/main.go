@@ -18,8 +18,8 @@ func main() {
 
 	// Configure CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8100"},        // Allow only the frontend origin
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"}, // Specify allowed methods
+		AllowOrigins:     []string{"http://localhost:8100"},                 // Allow only the frontend origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"}, // Specify allowed methods
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,

@@ -2,259 +2,368 @@ import {
   IonButton,
   IonContent,
   IonHeader,
+  IonItem,
   IonModal,
   IonPage,
   IonRange,
-  IonRouterLink,
   IonTitle,
+  IonToggle,
   IonToolbar,
 } from "@ionic/react";
-import { useSong } from "../context/SongContext";
+import React, { useEffect, useRef } from "react";
 import LeftArrowIcon from "../icons/LeftArrowIcon";
-import MenuIcon from "../icons/MenuIcon";
 import SoundMutedIcon from "../icons/SoundMutedIcon";
 import SoundIcon from "../icons/SoundIcon";
 import HeartIcon from "../icons/HeartIcon";
 import ShareIcon from "../icons/ShareIcon";
-import ShuffleIcon from "../icons/ShuffleIcon";
 import PreviousIcon from "../icons/PreviousIcon";
 import PauseIcon from "../icons/PauseIcon";
 import PlayIcon from "../icons/PlayIcon";
 import NextIcon from "../icons/NextIcon";
-import RepeatOnceMoreIcon from "../icons/RepeatOnceMoreIcon";
 import DefaultMusicIcon from "../images/default-music-icon.jpg";
-import { useRef, useState, useEffect } from "react";
-import { useModal } from "../context/ModalContext";
+import { useState } from "react";
+import { useSongContext } from "../context/SongContext";
+import { useNavigate } from "react-router-dom";
+import ShuffleIcon from "../icons/ShuffleIcon";
+import RepeatOnceMoreIcon from "../icons/RepeatOnceMoreIcon";
 import EqualizerIcon from "../icons/Equalizer";
+import PlaylistIcon from "../icons/PlaylistIcon";
+import FavouriteIcon from "../icons/FavouriteIcon";
+import SavedIcon from "../icons/SavedIcon";
+import "./Equalizer.css";
+import MusicNoteIcon from "../icons/MusicNote";
+import CrossIcon from "../icons/CrossIcon";
+import RedHeartIcon from "../icons/RedHeartIcon";
+import DefaultSavedSongIcon from "../icons/DefaultSavedSong";
+import SavedSongIcon from "../icons/SavedSongIcon";
 
 const GlobalPlaySong: React.FC = () => {
   const {
-    currentSong: songFromContext,
+    currentSong,
+    setCurrentSong,
+    songs,
+    closeModal,
     playNextSong,
     playPreviousSong,
-  } = useSong();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+    isPlaying,
+    isMuted,
+    togglePlayPause,
+    toggleMute,
+    toggleShuffle,
+    toggleRepeat,
+    currentTime,
+    duration,
+    handleSeek,
+    toggleFavouriteSong,
+    isFavourite,
+    isSaved,
+    toggleSavedSong,
+  } = useSongContext();
   const [showLyrics, setShowLyrics] = useState(false);
-  const [isEqualizerModalOpen, setIsEqualizerModalOpen] = useState(false);
-  const { isModalOpen, setIsModalOpen } = useModal();
+  const [showSongMenu, setShowSongMenu] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const audioElement = audioRef.current;
-
-    if (audioElement) {
-      // Update currentTime during playback
-      const handleTimeUpdate = () => {
-        setCurrentTime(audioElement.currentTime);
-      };
-
-      // Set duration when metadata is loaded
-      const handleLoadedMetadata = () => {
-        setDuration(audioElement.duration);
-      };
-
-      audioElement.addEventListener("timeupdate", handleTimeUpdate);
-      audioElement.addEventListener("loadedmetadata", handleLoadedMetadata);
-
-      // Cleanup event listeners
-      return () => {
-        audioElement.removeEventListener("timeupdate", handleTimeUpdate);
-        audioElement.removeEventListener(
-          "loadedmetadata",
-          handleLoadedMetadata
-        );
-      };
-    }
-  }, []);
-
-  useEffect(() => {
-    if (audioRef.current && songFromContext) {
-      audioRef.current.src = songFromContext.song_audio_url;
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
-  }, [songFromContext]);
-
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleRangeChange = (event: CustomEvent) => {
-    const newTime = event.detail.value as number;
-
-    if (audioRef.current) {
-      // Update the audio's current time
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  };
-
-  const formatTime = (time: number): string => {
+  const navigate = useNavigate();
+  const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    const seconds = Math.floor(time % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${minutes}:${seconds}`;
   };
 
-  if (!isModalOpen) return null;
+  const [gainValues, setGainValues] = useState([
+    { bandIndex: 0, value: 0, frequency: 60 }, // Bass
+    { bandIndex: 1, value: 0, frequency: 400 }, // Low-Mid
+    { bandIndex: 2, value: 0, frequency: 1000 }, // Mid
+    { bandIndex: 3, value: 0, frequency: 3000 }, // High-Mid
+    { bandIndex: 4, value: 0, frequency: 12000 }, // Treble
+  ]);
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>
-            <div className={`flex items-center justify-between `}>
-              <IonRouterLink>
+          <IonTitle
+            onClick={() => {
+              setIsModalOpen(false);
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <button aria-label="Close player" onClick={closeModal}>
                 <LeftArrowIcon width="24px" height="24px" />
-              </IonRouterLink>
-              {/* <MenuIcon width="24px" height="24px" /> */}
+              </button>
             </div>
           </IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen className="overflow-y-scroll bg-gray-500">
-        {songFromContext && (
+      <IonContent className="bg-gray-500">
+        {currentSong && (
           <div>
-            {showLyrics ? (
-              <div className="p-6 w-full h-[400px] overflow-y-scroll scrollbar-hidden text-[16px] text-white bg-gradient-to-b from-[#060307]/90 via-[#060307]/96 to-[#060307]/85">
-                {/* {songFromContext?.lyrics.replace(/<br>/g, '\n')} */}
-                {songFromContext?.lyrics
-                  .replaceAll(",", "\n")
-                  .replaceAll(/<br>/g, "\n")}
+            {showLyrics === true ? (
+              <div className="w-full h-[22rem] p-6 overflow-auto text-white bg-gradient-to-b from-black via-gray-800 to-black">
+                {currentSong?.lyrics
+                  ?.replaceAll(",", "\n")
+                  ?.replaceAll(/<br>/g, "\n") || "No lyrics available."}
               </div>
             ) : (
               <img
-                className="w-[100vw] h-[400px] object-cover"
+                className="w-full h-[20rem] object-cover"
                 src={
-                  songFromContext?.song_image_url != ""
-                    ? songFromContext?.song_image_url.replace(
-                        "150x150",
-                        "500x500"
-                      )
-                    : DefaultMusicIcon
+                  currentSong?.song_image_url?.replace("150x150", "500x500") ||
+                  DefaultMusicIcon
                 }
-                alt={songFromContext?.song_name}
+                alt={currentSong?.song_name}
+                onClick={() => {
+                  setIsModalOpen(false);
+                }}
               />
             )}
 
-            <div className="px-5 mt-2 ">
-              <div className="mt-8 flex items-center justify-center gap-x-6">
-                <div onClick={toggleMute}>
-                  {isMuted ? (
-                    <SoundMutedIcon width="24px" height="24px" />
-                  ) : (
-                    <SoundIcon width="24px" height="24px" />
-                  )}
-                </div>
-                <HeartIcon width="24px" height="24px" />
-                <ShareIcon width="24px" height="24px" />
-                <div
-                  onClick={() => {
-                    setIsEqualizerModalOpen(true);
-                  }}
-                >
-                  <EqualizerIcon width="24px" height="24px" />
-                </div>
-                {songFromContext?.has_lyrics == "true" && (
-                  <div
-                    className="rounded-lg   py-1.5 px-4 bg-[#EDEDED]"
+            {showSongMenu === true ? (
+              <>
+                <div className="mt-2 px-5 flex items-center justify-between">
+                  <p className="font-urbanist font-semibold text-[#060307] text-lg">
+                    Song Menu
+                  </p>
+                  <button
                     onClick={() => {
-                      setShowLyrics(!showLyrics);
+                      setShowSongMenu(false);
                     }}
                   >
-                    <p className="mb-0 font-urbanist font-semibold text-sm leading-5 text-center text-[#060307]">
-                      {showLyrics ? "Song" : "Lyrics"}
+                    <CrossIcon width="30px" height="30px" />
+                  </button>
+                </div>
+
+                <div className="mt-2 px-5 grid grid-cols-2 gap-4">
+                  <button
+                    className="p-2 w-full inline-flex flex-col items-center justify-center text-center gap-x-5 bg-[#EDEDED] rounded-2xl"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <EqualizerIcon width="30px" height="30px" />
+                    <p className="font-urbanist font-semibold text-[#060307] text-lg">
+                      Equalizer
                     </p>
-                  </div>
-                )}
+                  </button>
+                  <button className="p-2 w-full inline-flex flex-col items-center justify-center text-center gap-x-5 bg-[#EDEDED] rounded-2xl">
+                    <PlaylistIcon width="30px" height="30px" />
+                    <p className="font-urbanist font-semibold text-[#060307] text-lg">
+                      Add to Playlist
+                    </p>
+                  </button>
+                  <button className="p-2 w-full inline-flex flex-col items-center justify-center text-center gap-x-5 bg-[#EDEDED] rounded-2xl">
+                    <FavouriteIcon width="30px" height="30px" />
+                    <p className="font-urbanist font-semibold text-[#060307] text-lg">
+                      Add to Favorites
+                    </p>
+                  </button>
+                  <button className="p-2 w-full inline-flex flex-col items-center justify-center text-center gap-x-5 bg-[#EDEDED] rounded-2xl">
+                    <SavedIcon width="30px" height="30px" />
+                    <p className="font-urbanist font-semibold text-[#060307] text-lg">
+                      Add to Saved Songs
+                    </p>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="p-5">
+                <div className="flex items-center justify-center gap-6">
+                  {/* <button onClick={toggleMute} aria-label="Toggle mute"> */}
+                  <button onClick={toggleMute} aria-label="Toggle mute">
+                    {isMuted ? (
+                      <SoundMutedIcon width="24px" height="24px" />
+                    ) : (
+                      <SoundIcon width="24px" height="24px" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      toggleFavouriteSong(currentSong);
+                    }}
+                    aria-label="Add favourites"
+                  >
+                    {!isFavourite ? (
+                      <HeartIcon width="24px" height="24px" fill="none" />
+                    ) : (
+                      <RedHeartIcon width="24px" height="24px" fill="none" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      toggleSavedSong(currentSong);
+                    }}
+                    aria-label="add song for offline access"
+                  >
+                    {!isSaved ? (
+                      <DefaultSavedSongIcon width="24px" height="24px" />
+                    ) : (
+                      <SavedSongIcon width="24px" height="24px" />
+                    )}
+                  </button>
+                  {/* <button
+                    onClick={() => {
+                      setShowSongMenu(!showSongMenu);
+                    }}
+                  >
+                    <MusicNoteIcon width="24px" height="24px" />
+                  </button> */}
+                  {currentSong?.has_lyrics === "true" && (
+                    <button
+                      onClick={() => setShowLyrics(!showLyrics)}
+                      aria-label="Toggle lyrics"
+                      className="bg-gray-200 px-4 py-2 rounded"
+                    >
+                      {showLyrics ? "Song" : "Lyrics"}
+                    </button>
+                  )}
+                </div>
+                <div className="text-center mt-4">
+                  <p className="text-lg font-bold">{currentSong?.song_name}</p>
+                  <p className="text-sm text-gray-500">
+                    {currentSong?.primary_artists}
+                  </p>
+                </div>
+                <div className="flex items-center mt-2">
+                  <p>{formatTime(currentTime)}</p>
+                  <IonRange
+                    min={0}
+                    max={duration}
+                    value={currentTime}
+                    onIonChange={(e) => handleSeek(Number(e.detail.value))}
+                    className="mx-4 flex-1"
+                  />
+                  <p>{formatTime(duration)}</p>
+                </div>
+                <div className="flex items-center justify-center gap-8">
+                  <button
+                    onClick={toggleShuffle}
+                    aria-label="shuffle song list"
+                  >
+                    <ShuffleIcon width="28px" height="28px" />
+                  </button>
+                  <button
+                    onClick={playPreviousSong}
+                    aria-label="play previous song"
+                  >
+                    <PreviousIcon width="28px" height="28px" />
+                  </button>
+                  <button
+                    onClick={togglePlayPause}
+                    className="p-4 bg-red-600 rounded-full"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? (
+                      <PauseIcon width="32px" height="32px" />
+                    ) : (
+                      <PlayIcon width="32px" height="32px" />
+                    )}
+                  </button>
+                  <button onClick={playNextSong} aria-label="play next song">
+                    <NextIcon width="28px" height="28px" />
+                  </button>
+                  <button onClick={toggleRepeat} aria-label="repeat song list">
+                    <RepeatOnceMoreIcon width="28px" height="28px" />
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div className="px-5 mt-4">
-              <div className="">
-                <p className="mb-0 font-urbanist font-semibold text-lg leading-[18px] text-center text-[#060307]">
-                  {songFromContext?.song_name}
-                </p>
-                <p className="mt-2 mb-0 font-urbanist font-medium text-xs leading-[14px] text-center text-[#989CA0]">
-                  {songFromContext?.primary_artists}
-                </p>
-              </div>
-            </div>
-            <div className="px-5 mt-4 flex items-center ">
-              <p className="mb-0  font-urbanist font-semibold text-sm text-[#060307]">
-                {formatTime(currentTime)}
-              </p>
-              <audio
-                ref={audioRef}
-                src={songFromContext?.song_audio_url}
-                muted={isMuted}
-              ></audio>
-              <IonRange
-                className="w-[240px] mx-6"
-                min={0}
-                max={duration}
-                step={1}
-                value={currentTime}
-                onIonChange={handleRangeChange}
-              ></IonRange>
-              <p className="mb-0 text-right  font-urbanist font-semibold text-sm text-[#060307]">
-                {formatTime(duration)}
-              </p>
-            </div>
-
-            <div className="px-5 mt-3 flex items-center justify-between">
-              <ShuffleIcon width="24px" height="24px" />
-              <div onClick={playPreviousSong}>
-                <PreviousIcon width="28px" height="28px" />
-              </div>
-              <div
-                className="p-4 flex items-center justify-center  rounded-full bg-gradient-to-b from-[#FD4E6B] to-[#D4314C] cursor-pointer"
-                onClick={togglePlay}
-              >
-                {isPlaying ? (
-                  <PauseIcon width="32px" height="32px" />
-                ) : (
-                  <PlayIcon width="32px" height="32px" />
-                )}
-              </div>
-              <div onClick={playNextSong}>
-                <NextIcon width="28px" height="28px" />
-              </div>
-              <RepeatOnceMoreIcon width="24px" height="24px" />
-            </div>
+            )}
           </div>
         )}
         <IonModal
-          isOpen={isEqualizerModalOpen}
-          onDidDismiss={() => setIsEqualizerModalOpen(false)}
-          className="rounded-t-lg mt-[3rem] bg-white"
-          style={{ border: "2px solid red" }}
+          isOpen={isModalOpen}
+          className={`mt-28 rounded-t-3xl border-t-2 border-t-[#FFFFFF]`}
+          backdropDismiss={true} // Enable dismissing when clicking outside the modal
+          onDidDismiss={() => setIsModalOpen(false)} // Ensure modal state is reset
         >
-          <div>
-            Equalizer modal
-            <p
-              onClick={() => {
-                setIsEqualizerModalOpen(false);
-              }}
-            >
-              close
+          <div className="h-[80vh] p-6 bg-white rounded-t-2xl">
+            <div className="flex items-center justify-between">
+              <p className="mb-0 font-urbanist font-semibold text-[#060307] text-base">
+                Equalizer
+              </p>
+              <IonToggle color="dark" />
+            </div>
+
+            <div className="mt-2">
+              {gainValues.map((band, i) => (
+                <div key={i} className="flex items-center gap-x-3">
+                  <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                    {band.frequency}Hz
+                  </p>
+                  <IonRange
+                    min={-10}
+                    max={10}
+                    step={0.1}
+                    value={band.value}
+                    className="ml-2.5 relative top-1"
+                  />
+                </div>
+              ))}
+
+              {/* <div className="flex items-center gap-x-3">
+                <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                  150Hz
+                </p>
+                <IonRange className="ml-1.5 relative top-1" />
+              </div>
+              <div className="flex items-center gap-x-3">
+                <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                  400Hz
+                </p>
+                <IonRange className="ml-1 relative top-1" />
+              </div>
+              <div className="flex items-center gap-x-3">
+                <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                  1KHz
+                </p>
+                <IonRange className="ml-3 relative top-1" />
+              </div>
+              <div className="flex items-center gap-x-3">
+                <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                  2.4KHz
+                </p>
+                <IonRange className="relative top-1" />
+              </div>
+              <div className="flex items-center gap-x-3">
+                <p className="mt-2 text-[#989CA0] font-urbanist text-xs font-medium">
+                  15KHz
+                </p>
+                <IonRange className="ml-1 relative top-1" />
+              </div> */}
+            </div>
+
+            <p className="mt-2 text-[#989CA0] font-urbanist font-medium text-base">
+              Presets
             </p>
+            <hr className="bg-[#D9D9D9] mt-2" />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Acoustic
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Bass Booster
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Bass Reducer
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Classical
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Dance
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Deep
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Electronic
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Flat
+              </button>
+              <button className="p-1 rounded-lg text-center text-[#060307] bg-[#EDEDED] text-base font-urbanist font-semibold">
+                Hiphop
+              </button>
+            </div>
           </div>
         </IonModal>
       </IonContent>

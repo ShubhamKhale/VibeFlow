@@ -1,130 +1,123 @@
-import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom';
-import HomeIcon from '../icons/HomeIcon';  
-import SearchIcon from '../icons/SearchIcon';
-import FavouriteIcon from '../icons/FavouriteIcon';
-import SavedIcon from '../icons/SavedIcon';
-import PlusIcon from '../icons/PlustIcon';
-import { IonRouterLink } from '@ionic/react';
-
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import HomeIcon from "../icons/HomeIcon";
+import SearchIcon from "../icons/SearchIcon";
+import FavouriteIcon from "../icons/FavouriteIcon";
+import SavedIcon from "../icons/SavedIcon";
+import PlaylistIcon from "../icons/PlaylistIcon";
+import SoundIcon from "../icons/SoundIcon";
+import SoundMutedIcon from "../icons/SoundMutedIcon";
+import HeartIcon from "../icons/HeartIcon";
+import RedHeartIcon from "../icons/RedHeartIcon";
+import PauseIcon from "../icons/PauseIcon";
+import PlayIcon from "../icons/PlayIcon";
+import GlobalPlaySong from "./GlobalPlaySong";
+import { useSongContext } from "../context/SongContext";
 
 const TabNavigator: React.FC = () => {
-  
   const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    currentSong,
+    openModal,
+    isMuted,
+    toggleMute,
+    togglePlayPause,
+    toggleFavouriteSong,
+    isPlaying,
+    isFavourite,
+  } = useSongContext();
 
-  const [homeIconClicked, setHomeIconClicked] = useState(false);  
-  const [searchIconClicked, setSearchIconClicked] = useState(false);
-  const [favouriteIconClicked, setFavouriteIconClicked] = useState(false);
-  const [savedIconClicked, setSavedIconClicked] = useState(false);
-
+  const [isHidden, setIsHidden] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setHomeIconClicked(location.pathname === '/home');
-    setSearchIconClicked(location.pathname === '/search');
-    setFavouriteIconClicked(location.pathname === '/favourite');
-    setSavedIconClicked(location.pathname === '/saved');
-  }, [location.pathname]); 
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY) {
+        // If scrolling down, hide the navbar
+        setIsHidden(true);
+        if (timeoutId) clearTimeout(timeoutId);
+      } else {
+        // If scrolling up, delay before showing again
+        if (timeoutId) clearTimeout(timeoutId);
+        const id = setTimeout(() => {
+          setIsHidden(false);
+        }, 3000); // 3 seconds delay
+        setTimeoutId(id);
+      }
+      setLastScrollY(window.scrollY);
+    };
 
-  
-  return (        
-    <>  
-    {location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/signin" || location.pathname === "/playSong" ? (
-      ""
-    ) : (
-      <div className='py-5 px-7 w-screen rounded-t-2xl border-2 bg-white shadow-[0px_-4px_20px_0px_rgba(155,154,156,0.20)]'>
-            <div className='grid grid-cols-5 justify-items-center items-center gap-x-10'>
-                <IonRouterLink 
-                  routerLink='/home'
-                  className='inline-flex flex-col items-center gap-1.5 cursor-pointer'
-                  
-                  onClick={() => {
-                    setHomeIconClicked(!homeIconClicked);
-                    setSearchIconClicked(false);
-                    setFavouriteIconClicked(false);
-                    setSavedIconClicked(false);  
-                  }}
-                >
-                  <HomeIcon width="24px" height="24px" clicked={homeIconClicked}/>
-                  {  
-                    homeIconClicked ? (
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal bg-gradient-to-r from-[#FD4E6B] to-[#D4314C] bg-clip-text text-transparent'>Home</p>
-                    ) : (
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal'>Home</p>
-                    )
-                  }
-                </IonRouterLink>    
-                <IonRouterLink 
-                  routerLink='/search'
-                  className='inline-flex flex-col items-center gap-1.5 cursor-pointer'
-                  onClick={() => {
-                    setHomeIconClicked(false);
-                    setSearchIconClicked(!searchIconClicked);
-                    setFavouriteIconClicked(false);
-                    setSavedIconClicked(false);
-                  }}
-                >
-                  <SearchIcon width="24px" height="24px" clicked={searchIconClicked} />
-                  {
-                    searchIconClicked ? (
-                        <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal bg-gradient-to-r from-[#FD4E6B] to-[#D4314C] bg-clip-text text-transparent'>Search</p>
-                    ) : (
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [lastScrollY]);
 
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal'>Search</p>
-                    )
-                  }
-                </IonRouterLink>
-                <IonRouterLink routerLink='/create-playlist' className='p-3 rounded-full bg-gradient-to-b from-[#FD4E6B] to-[#D4314C] cursor-pointer'>
-                  <PlusIcon width="24px" height="24px" />
-                </IonRouterLink>         
-                <IonRouterLink     
-                  routerLink='/favourite'
-                  className='inline-flex flex-col items-center justify-center gap-1.5 cursor-pointer'
-                  onClick={() => {   
-                    setHomeIconClicked(false);
-                    setSearchIconClicked(false);
-                    setFavouriteIconClicked(!favouriteIconClicked);
-                    setSavedIconClicked(false);
-                  }}     
-                >
-                  <FavouriteIcon width="24px" height="24px" className='ml-2'  clicked={favouriteIconClicked} />
-                  {
-                    favouriteIconClicked ? (  
-
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal bg-gradient-to-r from-[#FD4E6B] to-[#D4314C] bg-clip-text text-transparent'>Favourite</p>
-                    ) : (
-
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal'>Favourite</p>
-                    )
-                  }     
-                </IonRouterLink>
-                
-                <IonRouterLink   
-                  routerLink='/saved'
-                  className='inline-flex flex-col items-center gap-1.5 cursor-pointer'
-                  onClick={() => {
-                    setHomeIconClicked(false);
-                    setSearchIconClicked(false);  
-                    setFavouriteIconClicked(false);
-                    setSavedIconClicked(!savedIconClicked);
-                  }}
-                >  
-                  <SavedIcon width="24px" height="24px" clicked={savedIconClicked} />
-                  {
-                    savedIconClicked ? (
-
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal bg-gradient-to-r from-[#FD4E6B] to-[#D4314C] bg-clip-text text-transparent'>Saved</p>
-                    ) : (
-   
-                      <p className='text-[#9B9A9C] text-center text-[10px] font-medium leading-normal'>Saved</p>
-                    )
-                  }
-                </IonRouterLink>  
-            </div>    
+  return (
+    <>
+      {!["/login", "/signup", "/signin", "/playSong", "/song-player"].includes(location.pathname) && (
+        <div
+          className={`fixed bottom-0 left-0 w-screen py-5 px-5 rounded-t-2xl border-2 bg-white shadow-lg transition-transform duration-1000 ${
+            isHidden ? "translate-y-full" : "translate-y-0"
+          }`}
+        >
+          {currentSong && (
+            <div className="mb-2 flex items-center justify-between">
+              <img
+                className="w-[60px] h-[60px] object-cover rounded-full"
+                src={currentSong?.song_image_url}
+                alt="-"
+                onClick={() => openModal(<GlobalPlaySong />)}
+              />
+              <div onClick={() => openModal(<GlobalPlaySong />)}>
+                <p className="text-[#060307] text-lg font-semibold truncate">
+                  {currentSong?.song_name}
+                </p>
+                <p className="text-[#9B9A9C] text-sm truncate">
+                  {currentSong?.primary_artists?.slice(0, 17)}
+                  {currentSong?.primary_artists?.length > 17 && "..."}
+                </p>
+              </div>
+              <button onClick={toggleMute} aria-label="Toggle mute">
+                {isMuted ? <SoundMutedIcon width="24px" height="24px" /> : <SoundIcon width="24px" height="24px" />}
+              </button>
+              <button onClick={() => toggleFavouriteSong(currentSong)} aria-label="Add to favourites">
+                {!isFavourite ? <HeartIcon width="24px" height="24px" /> : <RedHeartIcon width="24px" height="24px" />}
+              </button>
+              <button onClick={togglePlayPause} className="p-1 bg-red-600 rounded-full" aria-label="Play/Pause">
+                {isPlaying ? <PauseIcon width="24px" height="24px" /> : <PlayIcon width="24px" height="24px" />}
+              </button>
+            </div>
+          )}
+          <div className="grid grid-cols-5 justify-items-center items-center gap-x-10">
+            <div className="cursor-pointer" onClick={() => navigate("/home")}>
+              <HomeIcon width="24px" height="24px" />
+              <p className="text-[#9B9A9C] text-center text-[10px]">Home</p>
+            </div>
+            <div className="cursor-pointer" onClick={() => navigate("/search")}>
+              <SearchIcon width="24px" height="24px" />
+              <p className="text-[#9B9A9C] text-center text-[10px]">Search</p>
+            </div>
+            <div className="cursor-pointer flex flex-col items-center text-center" onClick={() => navigate("/playlist")}>
+              <PlaylistIcon width="24px" height="24px" />
+              <p className="text-[#9B9A9C] text-center text-[10px]">Playlists</p>
+            </div>
+            <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate("/favourite")}>
+              <FavouriteIcon width="24px" height="24px" />
+              <p className="text-[#9B9A9C] text-center text-[10px]">Favourite</p>
+            </div>
+            <div className="cursor-pointer" onClick={() => navigate("/saved")}>
+              <SavedIcon width="24px" height="24px" />
+              <p className="text-[#9B9A9C] text-center text-[10px]">Saved</p>
+            </div>
+          </div>
         </div>
-    )}
-        
+      )}
     </>
-  );    
-};  
+  );
+};
 
 export default TabNavigator;

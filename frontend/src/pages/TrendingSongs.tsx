@@ -2,7 +2,6 @@ import {
   IonContent,
   IonHeader,
   IonPage,
-  IonRouterLink,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
@@ -12,7 +11,7 @@ import RecentlyPlayedImg from "../images/recentlyPlayedImg.png";
 import ThreeDotsIcon from "../icons/ThreeDots";
 import { useEffect, useState } from "react";
 import { getTrendingPlaylist } from "../services/apiService";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface Song {
   songname: string;
@@ -39,6 +38,7 @@ const TrendingSongs: React.FC = () => {
 
   const [playlistId, setPlaylistId] = useState<string | undefined>(id);
   const [playlist, setPlaylist] = useState<Playlist>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTrendingPlaylist = async () => {
@@ -61,9 +61,9 @@ const TrendingSongs: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>
-            <IonRouterLink routerLink="/home">
+            <div onClick={() => {navigate("/home")}}>
               <LeftArrowIcon width="24px" height="24px" />
-            </IonRouterLink>
+            </div>
           </IonTitle>
         </IonToolbar>
       </IonHeader>

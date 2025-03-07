@@ -12,6 +12,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@ionic/react": "^8.0.0",
     "@ionic/storage": "^4.0.0",
     "@types/react-router": "^5.1.20",
@@ -19,7 +21,9 @@
     "antd": "^5.18.3",
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.2",
+    "framer-motion": "^12.4.7",
     "ionicons": "^7.0.0",
+    "libav.js": "^6.5.7",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -33,6 +37,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
+    "@types/ffmpeg": "^1.0.7",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-legacy": "^5.0.0",

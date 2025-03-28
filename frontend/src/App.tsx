@@ -24,6 +24,7 @@ import { SongProvider } from "./context/SongContext";
 
 import "@ionic/react/css/core.css";
 import "./theme/variables.css";
+import DetailedPlaylist from "./pages/DetailedPlaylist";
 
 setupIonicReact();
 
@@ -112,9 +113,11 @@ const App: React.FC = () => {
                   <Route path="/create-playlist" element={<CreatePlaylist />} />
                   <Route path="/playlist" element={<Playlist />} />
                   <Route path="/" element={<Navigate to="/home" />} />
-                  <Route path="*" element={<PageNotFound />} />
+                  <Route path="*" element={<PageNotFound />} />   
+                  {/* <Route path="/detailed-playlist/:userId/:playlistName" element={<DetailedPlaylist />} />; */}
+                  <Route path="/detailed-playlist/:userId/:playlistName/:playlistImage" element={<DetailedPlaylist />} />
                 </Routes>
-              </motion.div>
+              </motion.div>   
             </AnimatePresence>
           </IonContent>
 

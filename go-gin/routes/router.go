@@ -25,4 +25,5 @@ func SetupRoutes(r *gin.Engine) {
 	r.PATCH("/songs/add-song-to-favourites", controllers.AddSongToFavourites)
 	r.PATCH("/songs/remove-song-to-favourites", controllers.RemoveSongFromFavourites)
 	r.PATCH("/songs/add-song-to-playlist", controllers.AddSongToPlaylist)
+	r.GET("/get/playlist", controllers.GetUserPlaylist)
 }

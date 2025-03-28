@@ -9,8 +9,8 @@ import {
 import PlusIcon from "../icons/PlustIcon";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchPlaylists } from "../services/apiService";
-import { getItem } from "../services/storageService";
+import { addSongToPlaylist, fetchPlaylists } from "../services/apiService";
+import { getItem, removeItem, setItem } from "../services/storageService";
 import { Song } from "../App";
 
 type Playlist = {
@@ -31,17 +31,41 @@ const Playlist: React.FC = () => {
   const selectPlaylist = async (playlistData: Playlist) => {
 
     const playlistSong = await getItem("playlist_song");
-    console.log("playlist song", playlistSong)
+    // console.log("playlist song", playlistSong)
 
-    console.log("playlist data :- ", playlistData)
+    // console.log("playlist data :- ", playlistData)
+    const userId = await getItem("userId");
+    console.log(playlistData?.PlaylistName);    
 
+
+    // console.log("type of playlist song", typeof(playlistSong))
+
+    if (playlistSong && typeof playlistSong === "object") {
+      try {
+        const response = await addSongToPlaylist(userId, playlistData?.PlaylistName, playlistSong);
+        // console.log("Song added successfully:", response);
+        await removeItem("playlist_song");
+      } catch (error) {
+        console.error("Error adding song:", error);
+      } finally {
+        navigate("/search");   
+      }
+    } else {    
+      // navigate(`/detailed-playlist/${userId}/${encodeURIComponent(playlistData?.PlaylistName)}`);
+      navigate(
+        `/detailed-playlist/${userId}/${encodeURIComponent(playlistData?.PlaylistName)}/${encodeURIComponent(playlistData?.PlaylistImg)}`
+      );
+      
+      
+    }
+   
   }
 
   const getPlaylists = async () => {
     try {
       const userId = await getItem("userId");
       const response = await fetchPlaylists(userId);
-      console.log("response of get user playlist api", response);
+      // console.log("response of get user playlist api", response);
       setPlaylists(response.playlists);
     } catch (error) {
       console.log("error response of get user playlist api", error);
@@ -100,11 +124,11 @@ const Playlist: React.FC = () => {
           >
             {playlists?.map((playlist, index) => (
               <div key={index} onClick={() => {selectPlaylist(playlist)}} >
-                <div className="p-4 bg-[#EDEDED] rounded-2xl">
+                <div className="bg-[#EDEDED] rounded-2xl border-4">
                   <img
                     src={playlist?.PlaylistImg}
                     className="w-full h-full rounded-2xl"
-                  />
+                  />   
                 </div>
                 <p className="mt-2 text-[#060307] text-center text-base font-semibold font-urbanist">
                   {playlist?.PlaylistName}

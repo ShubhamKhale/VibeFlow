@@ -31,7 +31,7 @@ func LoadEnv() {
 
 // GetEnv retrieves an environment variable by key
 func GetEnv(key string) string {
-	LoadEnv() // Ensure env is loaded once
+	// LoadEnv() // Ensure env is loaded once
 	return envMap[key]
 }
 

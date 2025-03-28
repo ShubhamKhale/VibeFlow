@@ -20,32 +20,34 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PlaySong from "../components/PlaySong";
+import { useSongContext } from "../context/SongContext";
+import { Song } from "../App";
 
 // Define the structure of a song
-interface Song {
-  songname: string;
-  songurl: string;
-  songartist: string;
-}
+// interface Song {
+//   songname: string;
+//   songurl: string;
+//   songartist: string;
+// }
 
 // Define the structure of a playlist
 interface Playlist {
   _id: string;
   playlistname: string;
   playlisturl: string;
-  playlistimage: string;
+  playlistimage: string;   
   playlistartist: string;
   playlistsongs: Song[];
 }
 
-interface NewReleaseSong {
-  _id: string;
-  songname: string;
-  songurl: string;
-  songimage: string;
-  songartist: string;
-}
-
+// interface NewReleaseSong {
+//   _id: string;
+//   songname: string;
+//   songurl: string;
+//   songimage: string;
+//   songartist: string;
+// }
+   
 interface SongDetails {
   SongTitle: string,
   SongUrl: string,
@@ -54,13 +56,12 @@ interface SongDetails {
 }
 
 const Home: React.FC = () => {
-  const [isPlaySongCompOpen, setIsPlaySongCompOpen] = useState(false);
-  const [clickSongIndex, setClickSongIndex] = useState(0);
+  
   const [trendingPlaylists, setTrendingPlaylists] = useState<Playlist[]>([]);
-  const [newReleaseSongs, setNewReleaseSongs] = useState<NewReleaseSong[]>([]);
+  const [newReleaseSongs, setNewReleaseSongs] = useState<Song[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  useEffect(() => {  
     getTrendingPlaylists()
       .then((data) => {
         setTrendingPlaylists(data.mongodocs);
@@ -84,17 +85,17 @@ const Home: React.FC = () => {
     navigate(`/trending-playlist/${playlist._id}`, { state: { playlist } });
   };
 
-  const openSongModal = (index: number) => {
-    setClickSongIndex(index);
-    setIsPlaySongCompOpen(true);
-  };
+  // const openSongModal = (index: number) => {
+  //   setClickSongIndex(index);
+  //   setIsPlaySongCompOpen(true);
+  // };   
 
   const mappedSongs: SongDetails[] = newReleaseSongs.map((song) => ({
-    SongTitle: song.songname,
-    SongUrl: song.songurl,
-    ImageURL: song.songimage,
-    Artists: song.songartist,
-  }));
+    SongTitle: song.song_name,
+    SongUrl: song.song_audio_url,
+    ImageURL: song.song_image_url,
+    Artists: song.primary_artists,
+  }));  
 
   return (
     <IonPage>
@@ -103,13 +104,13 @@ const Home: React.FC = () => {
           <IonTitle>
             <div className="flex items-center justify-between">
               <p className="text-[#060307] font-urbanist text-lg font-semibold leading-normal">
-                Good evening
+                VibeFlow  
               </p>
-              <div onClick={() => {navigate('/profile')}} className="flex items-center gap-x-7">
+              {/* <div onClick={() => {navigate('/profile')}} className="flex items-center gap-x-7">
                
                   <ProfileIcon />
-              </div>
-            </div>
+              </div> */}
+            </div>   
           </IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -132,11 +133,11 @@ const Home: React.FC = () => {
             <p className="text-[#060307] font-urbanist text-base font-semibold leading-5">
               Trending Playlist
             </p>
-            <p className="text-[#99989A] font-urbanist text-sm font-semibold leading-normal">
+            {/* <p className="text-[#99989A] font-urbanist text-sm font-semibold leading-normal">
               Show all
-            </p>
+            </p> */}    
           </div>
-          <div className="mt-4 grid grid-flow-col items-center gap-x-3 w-full overflow-y-hidden overflow-x-auto scrollbar-hide scroll-smooth">
+          <div className="mt-4 grid grid-cols-2 items-center gap-3 w-full overflow-y-hidden overflow-x-auto scrollbar-hide scroll-smooth">
             {trendingPlaylists?.map((playlist, i) => (
               <div key={i} onClick={() => handlePlaylistClick(playlist)}>
                 <DisplayCard
@@ -148,34 +149,34 @@ const Home: React.FC = () => {
             ))}
           </div>
           <div className="mt-7 flex items-center justify-between">
-            <p className="text-[#060307] font-urbanist text-base font-semibold leading-5 capitalize">
+            {/* <p className="text-[#060307] font-urbanist text-base font-semibold leading-5 capitalize">
               new releases for you
-            </p>
-            <p className="text-[#99989A] font-urbanist text-sm font-semibold leading-normal">
-              Show all
-            </p>
+            </p> */}
+            {/* <p className="text-[#99989A] font-urbanist text-sm font-semibold leading-normal">
+              Show all   
+            </p> */}
           </div>
-          <div className="mt-4 grid grid-flow-col items-center gap-x-3 w-full overflow-y-hidden overflow-x-auto scrollbar-hide scroll-smooth">
+          {/* <div className="mt-4 grid grid-flow-col items-center gap-x-3 w-full overflow-y-hidden overflow-x-auto scrollbar-hide scroll-smooth">
             {newReleaseSongs?.map((song, i) => (
-              <div key={i} onClick={() => openSongModal(i)}>
+              <div key={i} >
                 <DisplayCard
                   imgSrc={song?.songimage}
                   albumName={song?.songname}
                   albumArtist={song?.songartist}
                 />
-              </div>
+              </div>   
             ))}
-          </div>
+          </div>    */}
         </div>
 
          {/* PlaySong Modal */}
-      <IonModal isOpen={isPlaySongCompOpen} onDidDismiss={() => setIsPlaySongCompOpen(false)}>
+      {/* <IonModal isOpen={isPlaySongCompOpen} onDidDismiss={() => setIsPlaySongCompOpen(false)}>
         <PlaySong
           songIndex={clickSongIndex}
           songs={mappedSongs}
           onClose={() => setIsPlaySongCompOpen(false)}
         />
-      </IonModal>
+      </IonModal> */}
       </IonContent>
     </IonPage>
   );

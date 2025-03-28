@@ -1,4 +1,5 @@
 import axios, { Axios, AxiosError } from "axios";
+import { Song } from "../App";
 // import Playlist from "../pages/Playlist";
 
 const API_URL = "http://localhost:8080";
@@ -40,17 +41,17 @@ interface UserErrorResponse {
 }
 
 // Define the structure of a song
-interface Song {
-  songname: string;
-  songurl: string;
-  songartist: string;
-}
+// interface Song {
+//   songname: string;
+//   songurl: string;
+//   songartist: string;
+// }
 
 interface TopAlbumns {
   albumnid: string;
   albumntitle: string;
   albumnimg: string;
-  albumnurl: string;
+  albumnurl: string;  
   albumnsongs: Song[];
 }
 
@@ -98,8 +99,8 @@ interface TrendingPlaylistResponse {
 
 interface NewReleaseSongResponse {
   statuscode: number;
-  message: string;
-  mongodocs: NewReleaseSong[];
+  message: string;  
+  mongodocs: Song[];
 }
 
 interface GenreSong {
@@ -162,6 +163,12 @@ type FetchPlaylistsResponse = {
   playlists: Playlist[];
 };
 
+type FetchPlaylistRespone = {
+  statuscode: number;
+  message: string;
+  playlistsongs: FavouriteSong[];  
+}      
+   
 interface AddSongToPlaylistResponse {
   statuscode: number;
   message: string;
@@ -312,9 +319,9 @@ const getNewReleaseSongs = async (): Promise<NewReleaseSongResponse> => {
     const axiosError = error as AxiosError<NewReleaseSongResponse>;
 
     const statuscode = axiosError.response?.data?.statuscode || 500;
-    const message =
+    const message =   
       axiosError.response?.data?.message || "error fetching new release songs";
-    const mongodos: NewReleaseSong[] =
+    const mongodos: Song[] =
       axiosError.response?.data?.mongodocs || [];
 
     throw { statuscode, message, mongodos };
@@ -483,6 +490,38 @@ const createPlaylist = async (
   }
 };
 
+const fetchPlaylist = async (
+  UserID: string | undefined,
+  PlaylistName: string | undefined  
+): Promise<FetchPlaylistRespone> => {
+    
+  console.log("UserID :- ", UserID)
+  console.log("PlaylistName :- ", PlaylistName)  
+
+  try {
+    const response = await axios.get<FetchPlaylistRespone>(
+      `${API_URL}/get/playlist`,
+      {   
+        params: { 
+          user_id: UserID,
+          playlist_name: PlaylistName
+        }        
+      }
+    );
+    console.log("response :- ", response.data);     
+    return response.data;  
+  } catch (error) {
+    const axiosError = error as AxiosError<FetchPlaylistRespone>;
+
+    const statuscode = axiosError.response?.data?.statuscode || 500;
+    const message =
+      axiosError.response?.data?.message || "Error fetching playlists";
+   
+    throw { statuscode, message, playlistsongs: [] };
+  }
+};
+
+
 const fetchPlaylists = async (
   UserID: string
 ): Promise<FetchPlaylistsResponse> => {
@@ -501,19 +540,20 @@ const fetchPlaylists = async (
 
     throw { statuscode, message, playlists: [] };
   }
-};
+};  
 
 const addSongToPlaylist = async (
   UserID: string,
   PlaylistName: string,
   Song: FavouriteSong
-): Promise<AddSongToPlaylistResponse> => {
-  try {
-    const response = await axios.post<AddSongToPlaylistResponse>(`${API_URL}/add-song-to-playlist`, {
-      user_id: UserID,
+): Promise<AddSongToPlaylistResponse> => {  
+
+  try {      
+    const response = await axios.patch<AddSongToPlaylistResponse>(`${API_URL}/songs/add-song-to-playlist`, {
+      user_id: UserID,    
       playlist_name: PlaylistName,
       song: Song,
-    });
+    });   
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<AddSongToPlaylistResponse>;
@@ -540,5 +580,6 @@ export {
   getFavouriteSongs,
   createPlaylist,
   fetchPlaylists,
-  addSongToPlaylist
+  addSongToPlaylist,
+  fetchPlaylist
 };

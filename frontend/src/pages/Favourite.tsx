@@ -109,8 +109,8 @@ const Favourite: React.FC = () => {
               Sort {sortOrder === "asc" ? "A-Z" : "Z-A"}
             </button>
             <p className="mt-2.5 text-[#7F8489] mb-0 font-urbanist text-xs font-medium leading-normal capitalize">
-              26 songs
-            </p>
+              {favouriteSongs?.length} songs
+            </p>    
           </div>
 
           <div

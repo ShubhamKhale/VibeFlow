@@ -16,7 +16,7 @@ var client *mongo.Client
 
 // Initialize MongoDB client
 func InitMongoClient() {
-	LoadEnv() // Ensure env is loaded once
+	// LoadEnv() // Ensure env is loaded once
 
 	mongourl := GetEnv("mongo_url")
 	if mongourl == "" {
@@ -154,12 +154,36 @@ func MongoAddMultipleDocuments(collectionName string, documents []interface{}) (
 }
 
 // Function to check whether the document exist in mongo or not
-func MongoDocumentExist(collectionName string, filter bson.M) (bool, bson.M, error) {
+// func MongoDocumentExist(collectionName string, filter bson.M) (bool, bson.M, error) {
 
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	defer cancel()
+
+// 	// Retrieve the  mongodb database name
+// 	dbname := GetEnv("mongo_dbname")
+// 	if dbname == "" {
+// 		log.Fatal("mongo_dbname not found in environment variables")
+// 	}
+
+// 	collection := client.Database(dbname).Collection(collectionName)
+
+// 	var result bson.M
+// 	err := collection.FindOne(ctx, filter).Decode(&result)
+
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return false, nil, nil // Document does not exist
+// 		}
+// 		return false, nil, err // other errors
+// 	}
+// 	return true, result, nil // Document exists
+// }
+
+func MongoDocumentExist(collectionName string, filter bson.M) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Retrieve the  mongodb database name
+	// Retrieve the MongoDB database name
 	dbname := GetEnv("mongo_dbname")
 	if dbname == "" {
 		log.Fatal("mongo_dbname not found in environment variables")
@@ -167,16 +191,12 @@ func MongoDocumentExist(collectionName string, filter bson.M) (bool, bson.M, err
 
 	collection := client.Database(dbname).Collection(collectionName)
 
-	var result bson.M
-	err := collection.FindOne(ctx, filter).Decode(&result)
-
+	count, err := collection.CountDocuments(ctx, filter)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return false, nil, nil // Document does not exist
-		}
-		return false, nil, err // other errors
+		return false, err
 	}
-	return true, result, nil // Document exists
+
+	return count > 0, nil
 }
 
 // Update one document in a collection
@@ -231,4 +251,28 @@ func MongoFindOneDocument(collectionName string, filter bson.M, projection bson.
 	}
 
 	return result, nil
+}
+
+func MongoAggregate(collectionName string, pipeline mongo.Pipeline) ([]bson.M, error) {
+	dbname := GetEnv("mongo_dbname")
+	if dbname == "" {
+		log.Fatal("mongo_dbname not found in environment variables")
+	}
+
+	collection := client.Database(dbname).Collection(collectionName)
+
+	// Execute aggregation
+	cursor, err := collection.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	// Process results
+	var results []bson.M
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

@@ -10,7 +10,7 @@ import {
 import SearchIcon from "../icons/SearchIcon";
 import DefaultMusicIcon from "../images/default-music-icon.jpg";
 import { useEffect, useRef, useState } from "react";
-import { getTopAlbumns, searchJioSaavnSongs } from "../services/apiService";
+import { getNewReleaseSongs, getTopAlbumns, searchJioSaavnSongs } from "../services/apiService";
 import { useNavigate } from "react-router-dom";
 import MusicLoading from "../icons/music-loading.gif";
 import { useSongContext } from "../context/SongContext";
@@ -30,7 +30,21 @@ const Search: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchSongs, setSearchSongs] = useState<any[]>([]);
   const [topAlbumns, setTopAlbumns] = useState<any[]>([]);
+  const [newReleaseSongs, setNewReleaseSongs] = useState<Song[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {  
+   
+
+    getNewReleaseSongs()
+      .then((data) => {
+        console.log("new release songs api response", data.mongodocs);
+        setNewReleaseSongs(data.mongodocs);
+      })
+      .catch((error) => {
+        console.error("Error fetching new release songs:", error);
+      });
+  }, []);
 
   useEffect(() => {
     getTopAlbumns()
@@ -89,6 +103,8 @@ const Search: React.FC = () => {
   };
 
   const setLocalSongs = async (song: Song, idx: any) => {
+
+    console.log("search songs :- ", searchSongs);  
     await setItem("songs", searchSongs);
     const localsongs = await getItem("songs");
     setSongs(localsongs);
@@ -161,10 +177,11 @@ const Search: React.FC = () => {
             <div className="mt-[50%] flex justify-center items-center">
               <img className="w-44 h-44" src={MusicLoading} alt="-" />
             </div>
+               
           ) : (
             <div className="mt-4">
               <div className="mt-4 grid grid-cols-1 gap-6">
-                {songs.map((song, i) => (
+                { songs.map((song, i) => (
                   <div key={i} className="flex items-center gap-x-3 relative">
                     <img
                       className="w-[100px] h-[100px] object-cover rounded-xl"
@@ -208,7 +225,9 @@ const Search: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div>  
+            
+               
           )}
         </div>
       </IonContent>

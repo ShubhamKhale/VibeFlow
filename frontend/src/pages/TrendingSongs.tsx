@@ -12,16 +12,20 @@ import ThreeDotsIcon from "../icons/ThreeDots";
 import { useEffect, useState } from "react";
 import { getTrendingPlaylist } from "../services/apiService";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSongContext } from "../context/SongContext";
+import { getItem, setItem } from "../services/storageService";
+import GlobalPlaySong from "../components/GlobalPlaySong";
+import { Song } from "../App";
 
-interface Song {
-  songname: string;
-  songurl: string;
-  songartist: string;
-}
+// interface Song {
+//   songname: string;
+//   songurl: string;
+//   songartist: string;
+// }
 
 interface Playlist {
   _id: string;
-  playlistname: string;
+  playlistname: string;   
   playlisturl: string;
   playlistimage: string;
   playlistartist: string;
@@ -34,11 +38,23 @@ const truncateText = (text: string, maxLength: number): string => {
 
 const TrendingSongs: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  console.log("id", id);
+  const { songs, setSongs, playSong, openModal } = useSongContext();
 
   const [playlistId, setPlaylistId] = useState<string | undefined>(id);
   const [playlist, setPlaylist] = useState<Playlist>();
   const navigate = useNavigate();
+
+  const setLocalSongs = async (song: any, idx: any) => {
+      
+    console.log("setLocalSongs song :- ", song[idx])
+    console.log("song's idx :- ", idx)   
+
+    await setItem("songs", playlist?.playlistsongs);
+    const localsongs = await getItem("songs");
+    setSongs(localsongs);  
+    playSong(song[idx], idx);                
+    openModal(<GlobalPlaySong />);    
+  };      
 
   useEffect(() => {
     const fetchTrendingPlaylist = async () => {
@@ -85,7 +101,9 @@ const TrendingSongs: React.FC = () => {
               <p className="text-sm text-[#7F8489] font-medium font-urbanist">
                 {playlist?.playlistsongs?.length} Songs
               </p>
-              <button className="mt-2 px-5 py-1.5 bg-[#655FDF] text-white rounded-lg text-center">
+              <button className="mt-2 px-5 py-1.5 bg-[#655FDF] text-white rounded-lg text-center" onClick={() => {
+                setLocalSongs(playlist?.playlistsongs, 0)
+              }}>
                 Play
               </button>
             </div>
@@ -93,18 +111,18 @@ const TrendingSongs: React.FC = () => {
           <div className="mt-8 h-[260px] overflow-y-scroll">
             {playlist?.playlistsongs?.map((song, i) => (
               <div key={i} className="w-full pl-2 pr-3 mt-2 flex items-center justify-between bg-[#D9D9D9] rounded-lg">
-                <div className="py-2">
+                <div className="py-2" onClick={() => { setLocalSongs(playlist?.playlistsongs, i)}}>
                   <p className="font-urbanist text-xs font-semibold">
-                    {song?.songname}
+                    {song?.song_name}    
                   </p>
                   <p className="font-urbanist text-xs font-semibold">
-                    { truncateText(song?.songartist, 35)}
+                    { truncateText(song?.primary_artists, 35)}
                   </p>
                 </div>
-                <div>
+                {/* <div>   
                   <ThreeDotsIcon width="24px" height="24px" />
-                </div>
-              </div>
+                </div> */}
+              </div>   
             ))}
           </div>
         </div>

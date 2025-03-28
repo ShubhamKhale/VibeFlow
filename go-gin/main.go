@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+
+	helpers.LoadEnv()
+
 	// Initialize Gin
 	r := gin.Default()
 

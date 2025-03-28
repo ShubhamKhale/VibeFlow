@@ -14,6 +14,10 @@ import PlayIcon from "../icons/PlayIcon";
 import GlobalPlaySong from "./GlobalPlaySong";
 import { useSongContext } from "../context/SongContext";
 
+const truncateText = (text: string, maxLength: number): string => {
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+};
+
 const TabNavigator: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,12 +78,13 @@ const TabNavigator: React.FC = () => {
               />
               <div onClick={() => openModal(<GlobalPlaySong />)}>
                 <p className="text-[#060307] text-lg font-semibold truncate">
-                  {currentSong?.song_name}
-                </p>
+                  {truncateText(currentSong?.song_name, 10)}
+                </p>     
                 <p className="text-[#9B9A9C] text-sm truncate">
-                  {currentSong?.primary_artists?.slice(0, 17)}
-                  {currentSong?.primary_artists?.length > 17 && "..."}
-                </p>
+                  {/* {currentSong?.primary_artists?.slice(0, 17)}
+                  {currentSong?.primary_artists?.length > 17 && "..."} */}
+                  { truncateText(currentSong?.primary_artists, 17)}
+                </p>   
               </div>
               <button onClick={toggleMute} aria-label="Toggle mute">
                 {isMuted ? <SoundMutedIcon width="24px" height="24px" /> : <SoundIcon width="24px" height="24px" />}

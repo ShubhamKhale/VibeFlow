@@ -2,8 +2,9 @@ import axios, { Axios, AxiosError } from "axios";
 import { Song } from "../App";
 // import Playlist from "../pages/Playlist";
 
-const API_URL = "http://localhost:8080";
-
+// const API_URL = "http://localhost:8080";
+const API_URL = "https://vibeflow-backend.onrender.com";
+    
 interface NewRegisterUserData {
   username: string;
   password: string;

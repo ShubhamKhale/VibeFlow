@@ -15,6 +15,7 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/get/userbyid/:id", controllers.GetUserByID)
 	r.GET("/get/topalbumns", controllers.FetchTopAlbumns)
 	r.GET("/get/jiosaavn/songs", controllers.SearchJioSaavnSongs)
+	r.GET("/get/song-suggestions", controllers.SongSuggestions)
 	r.POST("/get/playlists", controllers.FetchUsersPlaylists)
 	r.POST("/get/favourite-songs", controllers.GetFavouriteSongs)
 	r.POST("/create-user", controllers.CreateUser)

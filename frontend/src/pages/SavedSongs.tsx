@@ -10,10 +10,11 @@ import {
 import SearchIcon from "../icons/SearchIcon";
 import DefaultMusicIcon from "../images/default-music-icon.jpg";
 import { useSongContext } from "../context/SongContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getOfflineSongs } from "../services/storageService";
 import { Song } from "../App";
 import GlobalPlaySong from "../components/GlobalPlaySong";
+import TabNavigator from "../components/TabNavigator";
 
 const SavedSongs: React.FC = () => {
   const { setSongs, playSong, openModal } = useSongContext();
@@ -22,6 +23,9 @@ const SavedSongs: React.FC = () => {
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [hideTab, setHideTab] = useState(false);
+  const ionContentRef = useRef<HTMLIonContentElement | null>(null);
+  const lastScrollTop = useRef(0);
 
   useEffect(() => {
     const fetchOfflineSongs = async () => {
@@ -62,6 +66,17 @@ const SavedSongs: React.FC = () => {
       setFilteredSongs(filtered);
     }
   }, [searchQuery, savedSongs]);
+
+  const handleScroll = (event: CustomEvent) => {
+    const scrollTop = event.detail.scrollTop;
+
+    if (scrollTop > 0) {
+      setHideTab(true);
+    } else {
+      setHideTab(false);
+    }
+    lastScrollTop.current = scrollTop;
+  };
 
   return (
     <IonPage>
@@ -129,6 +144,16 @@ const SavedSongs: React.FC = () => {
           </div>
         </div>
       </IonContent>
+
+      <div
+        className={`bottom-0 w-full transition-all duration-800 transform ${
+          hideTab
+            ? "translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100 fixed"
+        }`}
+      >     
+        <TabNavigator />   
+      </div>
     </IonPage>
   );
 };

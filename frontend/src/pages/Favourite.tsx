@@ -10,7 +10,7 @@ import {
 import SearchIcon from "../icons/SearchIcon";
 import DefaultMusicIcon from "../images/default-music-icon.jpg";
 import RecentlyPlayedImg from "../images/recentlyPlayedImg.png";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchHistoryContainer from "../components/SearchHistoryContainer";
 import CrossIcon from "../icons/CrossIcon";
 import { getFavouriteSongs } from "../services/apiService";
@@ -18,28 +18,31 @@ import { getFavouriteSongIds } from "../services/storageService";
 import { Song } from "../App";
 import GlobalPlaySong from "../components/GlobalPlaySong";
 import { useSongContext } from "../context/SongContext";
+import TabNavigator from "../components/TabNavigator";
 
 const Favourite: React.FC = () => {
-    const { setSongs, playSong, openModal } = useSongContext();
+  const { setSongs, playSong, openModal } = useSongContext();
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [favouriteSongs, setFavouriteSongs] = useState<any[]>([]);
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [hideTab, setHideTab] = useState(false);
+  const ionContentRef = useRef<HTMLIonContentElement | null>(null);
+  const lastScrollTop = useRef(0);
 
   useEffect(() => {
-
     const fetchFavourites = async () => {
-        try {
-          const songIds = await getFavouriteSongIds();
-    
-          const favSongs = await getFavouriteSongs(songIds);
-          console.log("Favourite Songs:", favSongs);
-          setFavouriteSongs(favSongs);
-        } catch (error) {
-          console.error("Error fetching favourite songs:", error);
-        }
-      };
+      try {
+        const songIds = await getFavouriteSongIds();
+
+        const favSongs = await getFavouriteSongs(songIds);
+        console.log("Favourite Songs:", favSongs);
+        setFavouriteSongs(favSongs);
+      } catch (error) {
+        console.error("Error fetching favourite songs:", error);
+      }
+    };
 
     fetchFavourites();
   }, []);
@@ -60,7 +63,6 @@ const Favourite: React.FC = () => {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
-  // Search function
   useEffect(() => {
     if (searchQuery === "") {
       setFilteredSongs(favouriteSongs);
@@ -71,7 +73,17 @@ const Favourite: React.FC = () => {
       setFilteredSongs(filtered);
     }
   }, [searchQuery, favouriteSongs]);
-  
+
+  const handleScroll = (event: CustomEvent) => {
+    const scrollTop = event.detail.scrollTop;
+
+    if (scrollTop > 0) {
+      setHideTab(true);
+    } else {
+      setHideTab(false);
+    }
+    lastScrollTop.current = scrollTop;
+  };
 
   return (
     <IonPage>
@@ -96,7 +108,12 @@ const Favourite: React.FC = () => {
           </IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent
+        ref={ionContentRef}
+        fullscreen
+        onIonScroll={handleScroll}
+        scrollEvents={true}
+      >
         <div className="px-5 mt-4 mb-7">
           <div className="flex items-center justify-between">
             <p className="text-[#060307] pt-2 font-urbanist text-base font-semibold leading-5 capitalize">
@@ -110,7 +127,7 @@ const Favourite: React.FC = () => {
             </button>
             <p className="mt-2.5 text-[#7F8489] mb-0 font-urbanist text-xs font-medium leading-normal capitalize">
               {favouriteSongs?.length} songs
-            </p>    
+            </p>
           </div>
 
           <div
@@ -126,7 +143,9 @@ const Favourite: React.FC = () => {
                 <img
                   className="w-[100px] h-[100px] object-cover rounded-xl"
                   src={
-                    song.song_image_url !== "" ? song.song_image_url : DefaultMusicIcon
+                    song.song_image_url !== ""
+                      ? song.song_image_url
+                      : DefaultMusicIcon
                   }
                 />
                 <div>
@@ -142,6 +161,24 @@ const Favourite: React.FC = () => {
           </div>
         </div>
       </IonContent>
+
+      {/* <div
+        className={`bottom-0 w-full transition-all duration-500 ${
+          hideTab ? "opacity-0 pointer-events-none" : "opacity-100 fixed"
+        }`}    
+      >
+        <TabNavigator />   
+      </div> */}
+
+      <div
+        className={`bottom-0 w-full transition-all duration-800 transform ${
+          hideTab
+            ? "translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100 fixed"
+        }`}
+      >
+        <TabNavigator />   
+      </div>
     </IonPage>
   );
 };

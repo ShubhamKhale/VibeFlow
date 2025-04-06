@@ -8,10 +8,11 @@ import {
 } from "@ionic/react";
 import PlusIcon from "../icons/PlustIcon";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addSongToPlaylist, fetchPlaylists } from "../services/apiService";
 import { getItem, removeItem, setItem } from "../services/storageService";
 import { Song } from "../App";
+import TabNavigator from "../components/TabNavigator";
 
 type Playlist = {
   PlaylistName: string;
@@ -27,6 +28,9 @@ const Playlist: React.FC = () => {
   const navigate = useNavigate();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hideTab, setHideTab] = useState(false);
+  const ionContentRef = useRef<HTMLIonContentElement | null>(null);
+  const lastScrollTop = useRef(0);
 
   const selectPlaylist = async (playlistData: Playlist) => {
 
@@ -77,7 +81,16 @@ const Playlist: React.FC = () => {
   }, []);
 
   
-  
+  const handleScroll = (event: CustomEvent) => {
+    const scrollTop = event.detail.scrollTop;
+
+    if (scrollTop > 0) {
+      setHideTab(true);
+    } else {
+      setHideTab(false);
+    }
+    lastScrollTop.current = scrollTop;
+  };
 
   return (
     <IonPage>
@@ -138,6 +151,16 @@ const Playlist: React.FC = () => {
           </div>
         </div>
       </IonContent>
+
+      <div
+        className={`bottom-0 w-full transition-all duration-800 transform ${
+          hideTab
+            ? "translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100 fixed"
+        }`}
+      >
+        <TabNavigator />   
+      </div>
     </IonPage>
   );
 };

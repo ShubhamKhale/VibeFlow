@@ -10,7 +10,12 @@ import {
 import SearchIcon from "../icons/SearchIcon";
 import DefaultMusicIcon from "../images/default-music-icon.jpg";
 import { useEffect, useRef, useState } from "react";
-import { getNewReleaseSongs, getTopAlbumns, searchJioSaavnSongs } from "../services/apiService";
+import {
+  getNewReleaseSongs,
+  getTopAlbumns,
+  searchJioSaavnSongs,
+  getSongSuggestions,
+} from "../services/apiService";
 import { useNavigate } from "react-router-dom";
 import MusicLoading from "../icons/music-loading.gif";
 import { useSongContext } from "../context/SongContext";
@@ -19,6 +24,7 @@ import { Song } from "../App";
 import GlobalPlaySong from "../components/GlobalPlaySong";
 import ThreeDotsIcon from "../icons/ThreeDots";
 import SongOptions from "../components/SongOptions";
+import TabNavigator from "../components/TabNavigator";
 
 const Search: React.FC = () => {
   const { songs, setSongs, playSong, openModal } = useSongContext(); // Correct hook usage
@@ -31,11 +37,13 @@ const Search: React.FC = () => {
   const [searchSongs, setSearchSongs] = useState<any[]>([]);
   const [topAlbumns, setTopAlbumns] = useState<any[]>([]);
   const [newReleaseSongs, setNewReleaseSongs] = useState<Song[]>([]);
+  const [songSuggestions, setSongSuggestions] = useState<Song[]>([]);
   const navigate = useNavigate();
+  const [hideTab, setHideTab] = useState(false);
+  const ionContentRef = useRef<HTMLIonContentElement | null>(null);
+  const lastScrollTop = useRef(0);
 
-  useEffect(() => {  
-   
-
+  useEffect(() => {
     getNewReleaseSongs()
       .then((data) => {
         console.log("new release songs api response", data.mongodocs);
@@ -74,6 +82,18 @@ const Search: React.FC = () => {
       setLoading(true);
       const encodedQuery = encodeURIComponent(debouncedSearchQuery);
 
+      getSongSuggestions(encodedQuery)
+        .then(async (data) => {
+          if (data != null) {
+            console.log("song suggestions :- ", data);
+            setSongSuggestions(data);
+          }
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log("song search suggestions error ", error);
+        });
+
       searchJioSaavnSongs(encodedQuery)
         .then(async (data) => {
           if (data != null) {
@@ -103,8 +123,7 @@ const Search: React.FC = () => {
   };
 
   const setLocalSongs = async (song: Song, idx: any) => {
-
-    console.log("search songs :- ", searchSongs);  
+    console.log("search songs :- ", searchSongs);
     await setItem("songs", searchSongs);
     const localsongs = await getItem("songs");
     setSongs(localsongs);
@@ -144,6 +163,17 @@ const Search: React.FC = () => {
     setActiveMenu(null);
   };
 
+  const handleScroll = (event: CustomEvent) => {
+    const scrollTop = event.detail.scrollTop;
+
+    if (scrollTop > 0) {
+      setHideTab(true);
+    } else {
+      setHideTab(false);
+    }
+    lastScrollTop.current = scrollTop;
+  };
+
   return (
     <IonPage>
       <IonHeader>
@@ -177,11 +207,10 @@ const Search: React.FC = () => {
             <div className="mt-[50%] flex justify-center items-center">
               <img className="w-44 h-44" src={MusicLoading} alt="-" />
             </div>
-               
-          ) : (
+          ) : searchQuery.trim() === "" ? (
             <div className="mt-4">
               <div className="mt-4 grid grid-cols-1 gap-6">
-                { songs.map((song, i) => (
+                {newReleaseSongs.map((song, i) => (
                   <div key={i} className="flex items-center gap-x-3 relative">
                     <img
                       className="w-[100px] h-[100px] object-cover rounded-xl"
@@ -225,12 +254,68 @@ const Search: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>  
-            
-               
+            </div>
+          ) : (
+            <div className="mt-4">
+              <div className="mt-4 grid grid-cols-1 gap-6">
+                {songs.map((song, i) => (
+                  <div key={i} className="flex items-center gap-x-3 relative">
+                    <img
+                      className="w-[100px] h-[100px] object-cover rounded-xl"
+                      src={
+                        song.song_image_url !== ""
+                          ? song.song_image_url
+                          : DefaultMusicIcon
+                      }
+                      alt={song.song_name}
+                      onClick={() => {
+                        setLocalSongs(song, i);
+                      }}
+                    />
+                    <div className="w-full flex items-center justify-between">
+                      <div
+                        onClick={() => {
+                          setLocalSongs(song, i);
+                        }}
+                      >
+                        <p className="text-[#060307] font-urbanist text-[16px] font-semibold leading-normal capitalize">
+                          {song.song_name}
+                        </p>
+                        <p className="text-[#060307] font-urbanist text-xs leading-normal capitalize">
+                          {song.primary_artists}
+                        </p>
+                      </div>
+                      <div className="relative" ref={menuRef}>
+                        <ThreeDotsIcon
+                          width="24px"
+                          height="24px"
+                          onClick={(e) => handleMenuClick(i, e, song)}
+                        />
+                        <SongOptions
+                          song={song}
+                          isVisible={activeMenu === i}
+                          onClose={() => setActiveMenu(null)}
+                          onOptionClick={handleOptionClick}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </IonContent>
+
+      <div
+        className={`bottom-0 w-full transition-all duration-800 transform ${
+          hideTab
+            ? "translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100 fixed"
+        }`}
+      >
+        <TabNavigator />
+      </div>
     </IonPage>
   );
 };

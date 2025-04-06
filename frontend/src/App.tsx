@@ -62,7 +62,6 @@ const App: React.FC = () => {
 
     setLastScrollY(scrollTop);
 
-    // Restore tab after 2 sec if no scroll
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -122,13 +121,13 @@ const App: React.FC = () => {
           </IonContent>
 
           {/* Bottom Tab Navigator */}
-          <div
+          {/* <div
             className={`fixed bottom-0 w-full transition-transform duration-500 ${
               hideTab ? "translate-y-full" : "translate-y-0"
             }`}
           >
-            <TabNavigator />
-          </div>
+            <TabNavigator />     
+          </div> */}
         </IonPage>
       </SongProvider>
     </IonApp>

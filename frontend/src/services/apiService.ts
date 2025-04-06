@@ -174,6 +174,20 @@ interface AddSongToPlaylistResponse {
   message: string;
 }
 
+const getSongSuggestions = async (query: string): Promise<any> => {
+  try {
+    const response = await axios.get(`${API_URL}/get/song-suggestions`, {
+      params: { query },
+    });
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<ErrorResponse>;
+    throw new Error(
+      axiosError.response?.data?.message || "Error getting song suggestions"
+    );  
+  }
+}
+
 const searchJioSaavnSongs = async (query: string): Promise<any> => {
   try {
     const response = await axios.get(`${API_URL}/get/jiosaavn/songs`, {
@@ -581,5 +595,6 @@ export {
   createPlaylist,
   fetchPlaylists,
   addSongToPlaylist,
-  fetchPlaylist
+  fetchPlaylist,
+  getSongSuggestions
 };

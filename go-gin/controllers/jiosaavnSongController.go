@@ -31,13 +31,66 @@ func SearchJioSaavnSongs(c *gin.Context) {
 
 }
 
-func SearchForSongs(query string) interface{} {
-
-	fmt.Println("query", query)
+func GenerateSongSuggestions(query string) interface{} {
 
 	formattedQuery := strings.ReplaceAll(strings.ToLower(query), " ", "%2520")
 
-	fmt.Println("formattedQuery", formattedQuery)
+	searchURL := fmt.Sprintf("https://www.jiosaavn.com/api.php?__call=search.getResults&q=%s&ctx=wap6dot0&api_version=4&_format=json&_marker=0", formattedQuery)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", searchURL, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	bodyString := string(body)
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Error: Non-200 status code:", resp.StatusCode)
+		fmt.Println("Response body:", bodyString)
+	}
+
+	songsData := gjson.Get(bodyString, "results")
+
+	var songs []map[string]interface{}
+	for _, song := range songsData.Array() {
+		id := song.Get("id").String()
+		songData := GetSong(id)
+		if songData != nil {
+			songs = append(songs, songData)
+		}
+	}
+
+	return songs
+
+}
+
+func SongSuggestions(c *gin.Context) {
+
+	query := c.Query("query")
+	if query == "" {
+		utils.RespondError(c, http.StatusBadRequest, "Query parameter is required")
+		return
+	}
+
+	songs := GenerateSongSuggestions(query)
+
+	utils.RespondJSON(c, http.StatusOK, songs)
+}
+
+func SearchForSongs(query string) interface{} {
+
+	formattedQuery := strings.ReplaceAll(strings.ToLower(query), " ", "%2520")
 
 	searchURL := "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query=" + formattedQuery
 
